@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'monitoring.publishing',
     'monitoring.availability',
+    'monitoring.synchronisation',
 ]
 
 REST_FRAMEWORK = {
