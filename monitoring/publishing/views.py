@@ -17,6 +17,41 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = GridSiteSerializer
     template_name = 'gridsites.html'
 
+    def list(self, request):
+        last_fetched = GridSite.objects.aggregate(Max('fetched'))['fetched__max']
+        if last_fetched is not None:
+            print(last_fetched.replace(tzinfo=None), datetime.today() - timedelta(hours=1, seconds=20))
+        if last_fetched is None or (last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20))):
+            fetchset = VSuperSummaries.objects.using('grid').raw("SELECT Site, max(LatestEndTime) AS LatestPublish FROM VSuperSummaries WHERE Year=2019 GROUP BY 1;")
+            for f in fetchset:
+                GridSite.objects.update_or_create(defaults={'updated': f.LatestPublish}, name=f.Site)
+        else:
+            print('No need to update')
+
+        final_response = []
+        response = super(GridSiteViewSet, self).list(request)
+        
+        for single_dict in response.data:
+            date = single_dict.get('updated').replace(tzinfo=None)
+
+            diff = datetime.today() - date
+            if diff <= timedelta(days=7):
+                single_dict['returncode'] = 0
+                single_dict['stdout'] = "OK [ last published %s days ago: %s ]" % (diff.days, date.strftime("%Y-%m-%d"))
+            elif diff > timedelta(days=7):
+                single_dict['returncode'] = 1
+                single_dict['stdout'] = "WARNING [ last published %s days ago: %s ]" % (diff.days, date.strftime("%Y-%m-%d"))
+            else:
+                single_dict['returncode'] = 3
+                single_dict['stdout'] = "UNKNOWN"
+            final_response.append(single_dict)
+        
+        if type(request.accepted_renderer) is TemplateHTMLRenderer:
+            response.data = {'sites': final_response, 'last_fetched': last_fetched}
+
+        return response
+
+        
     def retrieve(self, request, pk=None):
         last_fetched = GridSite.objects.aggregate(Max('fetched'))['fetched__max']
         # If there's no data then last_fetched is None.
