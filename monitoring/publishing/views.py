@@ -8,8 +8,8 @@ from django.db.models import Max
 from rest_framework import viewsets
 from rest_framework.renderers import TemplateHTMLRenderer
 
-from models import GridSite, VSuperSummaries, CloudSite, VAnonCloudRecord
-from serializers import GridSiteSerializer, CloudSiteSerializer
+from monitoring.publishing.models import GridSite, VSuperSummaries, CloudSite, VAnonCloudRecord
+from monitoring.publishing.serializers import GridSiteSerializer, CloudSiteSerializer
 
 
 class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
