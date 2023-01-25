@@ -6,7 +6,7 @@ from django.db import models
 
 class GridSite(models.Model):
     fetched = models.DateTimeField(auto_now=True)
-    name = models.CharField(max_length=255, primary_key=True)
+    SiteName = models.CharField(max_length=255, primary_key=True)
     updated = models.DateTimeField()
 
 
@@ -18,7 +18,7 @@ class VSuperSummaries(models.Model):
     RecordStart = models.DateTimeField()                                                           
     RecordEnd = models.DateTimeField()    
     RecordCountPublished = models.IntegerField()                                                  
-
+                                                               
     class Meta:
         managed = False
         db_table = 'VSuperSummaries'
@@ -53,13 +53,13 @@ class VSyncRecords(models.Model):
 
 class CloudSite(models.Model):
     fetched = models.DateTimeField(auto_now=True)
-    name = models.CharField(max_length=255, primary_key=True)
-    vms = models.IntegerField(default=0)
-    script = models.CharField(max_length=255)
+    SiteName = models.CharField(max_length=255, primary_key=True)
+    Vms = models.IntegerField(default=0)
+    Script = models.CharField(max_length=255)
     updated = models.DateTimeField()
 
     class Meta:
-        ordering = ('name',)
+        ordering = ('SiteName',)
 
 
 class VAnonCloudRecord(models.Model):
@@ -78,3 +78,4 @@ class VAnonCloudRecord(models.Model):
                                                     self.CloudType,
                                                     self.UpdateTime,
                                                     self.VMs)
+                                                    
