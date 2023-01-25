@@ -9,8 +9,8 @@ import pandas as pd
 from rest_framework import viewsets, generics
 from rest_framework.renderers import TemplateHTMLRenderer
 
-from monitoring.publishing.models import GridSite, VSuperSummaries, CloudSite, VAnonCloudRecord, GridSiteSync, VSyncRecords
-from monitoring.publishing.serializers import GridSiteSerializer, CloudSiteSerializer, GridSiteSyncSerializer
+from monitoring.publishing.models import GridSite, VSuperSummaries, CloudSite, VAnonCloudRecord, GridSiteSync, VSyncRecords, GridSiteSyncSubmitH
+from monitoring.publishing.serializers import GridSiteSerializer, CloudSiteSerializer, GridSiteSyncSerializer, GridSiteSyncSubmitHSerializer
 
 
 class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
@@ -256,6 +256,117 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
         response.data = {'records': response.data, 'last_fetched': last_fetched}
         return response
     
+
+# Needed for passing two parameters to a viewset (GridSiteSyncSubmitHViewSet)
+class MultipleFieldLookupMixin:
+    """
+    Apply this mixin to any view or viewset to get multiple field filtering
+    based on a `lookup_fields` attribute, instead of the default single field filtering.
+    """
+    def get_object(self):
+        queryset = self.get_queryset()           
+        queryset = self.filter_queryset(queryset) 
+        filter = {}
+        for field in self.lookup_fields:
+            if self.kwargs.get(field):
+                filter[field] = self.kwargs[field]
+        obj = get_object_or_404(queryset, **filter)  
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyModelViewSet):
+    queryset = GridSiteSyncSubmitH.objects.all()
+    serializer_class = GridSiteSyncSubmitHSerializer
+    template_name = 'gridsync_submithost.html'
+    
+    def list(self, request): 
+        response = super(GridSiteSyncSubmitHViewSet, self).list(request)
+        response.data = {'submisthosts': response.data, 'last_fetched': last_fetched}
+        return response
+
+    def retrieve(self, request, SiteName=None, YearMonth=None): 
+
+        lookup_fields = ('SiteName', 'YearMonth')
+        last_fetched = GridSiteSyncSubmitH.objects.aggregate(Max('fetched'))['fetched__max']
+        Year, Month = YearMonth.replace('-', ' ').split(' ')
+        sitename_in_table = None
+        yearmonth_in_table = None
+
+        # This is to ensure the data is updated when changing (or clicking on another) month 
+        if GridSiteSyncSubmitH.objects.count() > 0:
+            row_1 = GridSiteSyncSubmitH.objects.filter()[:1].get()
+            sitename_in_table = row_1.SiteName 
+            yearmonth_in_table = row_1.YearMonth
+
+        if last_fetched is not None:
+            print(last_fetched.replace(tzinfo=None), datetime.today() - timedelta(hours=1, seconds=20))
+        if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)) or (sitename_in_table!=SiteName) or (yearmonth_in_table!=YearMonth) :
+            print('Out of date')
+
+            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, SubmitHost AS SubmitHostSumm, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year)) 
+            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb, SubmitHost AS SubmitHostSync FROM VSyncRecords WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year)) 
+
+            Summaries_dict  = {"Site":[], "Month":[], "Year":[], "SubmitHostSumm":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]} 
+            SyncRecords_dict  = {"Site":[], "Month":[], "Year":[],"SubmitHostSync":[], "RecordCountInDb":[]} 
+
+            for row in fetchset_Summaries:
+                Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
+                Summaries_dict["Month"] = Summaries_dict.get("Month") + [row.Month]
+                Summaries_dict["Year"] = Summaries_dict.get("Year") + [row.Year]
+                Summaries_dict["SubmitHostSumm"] = Summaries_dict.get("SubmitHostSumm") + [row.SubmitHostSumm]
+                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished")  + [row.RecordCountPublished]       
+                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart")  + [row.RecordStart]   
+                Summaries_dict["RecordEnd"] = Summaries_dict.get("RecordEnd") + [row.RecordEnd]
+
+            for row in fetchset_SyncRecords:
+                SyncRecords_dict["Site"] = SyncRecords_dict.get("Site") + [row.Site]      
+                SyncRecords_dict["Month"] = SyncRecords_dict.get("Month") + [row.Month]  
+                SyncRecords_dict["Year"] = SyncRecords_dict.get("Year") + [row.Year]
+                SyncRecords_dict["SubmitHostSync"] = SyncRecords_dict.get("SubmitHostSync") + [row.SubmitHostSync]    
+                SyncRecords_dict["RecordCountInDb"] = SyncRecords_dict.get("RecordCountInDb") + [row.RecordCountInDb]
+
+            df_Summaries = pd.DataFrame.from_dict(Summaries_dict)
+            df_SyncRecords = pd.DataFrame.from_dict(SyncRecords_dict)
+            df_Summaries.dropna(inplace=True)
+            df_SyncRecords.dropna(inplace=True)
+
+            df_all = df_Summaries.merge(df_SyncRecords, left_on=['Site', 'Month', 'Year', 'SubmitHostSumm'], right_on=['Site', 'Month', 'Year', 'SubmitHostSync'], how='outer')
+            fetchset = df_all.to_dict('index')
+        
+            # This is to list only data for one month 
+            GridSiteSyncSubmitH.objects.all().delete()
+            
+            def get_year_month_string(year, month):
+                year_string = str(year)
+                month_string = str(month)
+                if len(month_string)==1:
+                    month_string = '0'+month_string
+                return year_string+ '-' +month_string
+
+            for f in fetchset.values():
+                GridSiteSyncSubmitH.objects.update_or_create(
+                    defaults={
+                            'RecordStart': f.get("RecordStart"), 
+                            'RecordEnd': f.get("RecordEnd"), 
+                            'RecordCountPublished': f.get("RecordCountPublished"),
+                            'RecordCountInDb': f.get("RecordCountInDb"), 
+                            }, 
+                    SiteName=f.get("Site"),
+                    YearMonth = get_year_month_string(f.get("Year"), f.get("Month")), 
+                    Month=f.get("Month"),
+                    Year=f.get("Year"),
+                    SubmitHost = f.get("SubmitHostSumm"),
+                )
+
+        else:
+            print('No need to update')
+
+        response = super(GridSiteSyncSubmitHViewSet, self).list(request)
+        response.data = {'submisthosts': response.data, 'last_fetched': last_fetched}
+        return response
+        
+
 
 class CloudSiteViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CloudSite.objects.all()
