@@ -13,10 +13,42 @@ class GridSite(models.Model):
 class VSuperSummaries(models.Model):
     Site = models.CharField(max_length=255, primary_key=True)
     LatestPublish = models.DateTimeField()
+    Month = models.IntegerField()
+    Year = models.IntegerField()
+    RecordStart = models.DateTimeField()                                                           
+    RecordEnd = models.DateTimeField()    
+    RecordCountPublished = models.IntegerField()                                                  
 
     class Meta:
         managed = False
         db_table = 'VSuperSummaries'
+
+
+class GridSiteSync(models.Model):
+    fetched = models.DateTimeField(auto_now=True)
+    SiteName = models.CharField(max_length=255)
+    YearMonth = models.CharField(max_length=255)
+    Year = models.IntegerField()
+    Month = models.IntegerField()
+    RecordStart = models.DateTimeField()                                                           
+    RecordEnd = models.DateTimeField()  
+    RecordCountPublished = models.IntegerField()
+    RecordCountInDb = models.IntegerField()
+    SyncStatus = models.CharField(max_length=255)
+
+    class Meta:
+        # Descending order of Year and Month to display latest data first
+        ordering = ('SiteName', '-Year', '-Month')
+        unique_together = ('SiteName', 'YearMonth')
+        
+
+class VSyncRecords(models.Model):
+    Site = models.CharField(max_length=255, primary_key=True)
+    RecordCountInDb = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'VSyncRecords'
 
 
 class CloudSite(models.Model):
