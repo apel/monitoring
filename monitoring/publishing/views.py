@@ -4,12 +4,13 @@ from __future__ import unicode_literals
 from datetime import datetime, timedelta
 
 from django.db.models import Max
+import pandas as pd
 
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
 from rest_framework.renderers import TemplateHTMLRenderer
 
-from monitoring.publishing.models import GridSite, VSuperSummaries, CloudSite, VAnonCloudRecord
-from monitoring.publishing.serializers import GridSiteSerializer, CloudSiteSerializer
+from monitoring.publishing.models import GridSite, VSuperSummaries, CloudSite, VAnonCloudRecord, GridSiteSync, VSyncRecords
+from monitoring.publishing.serializers import GridSiteSerializer, CloudSiteSerializer, GridSiteSyncSerializer
 
 
 class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
@@ -86,6 +87,175 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
 
         return response
 
+
+
+class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = GridSiteSync.objects.all()
+    serializer_class = GridSiteSyncSerializer
+    lookup_field = 'SiteName'  
+
+    # When a single site is showed (retrieve function used), the template 
+    # is different than the one used when showing a list of sites
+    def get_template_names(self):
+        if self.action == 'list':            
+            return ['gridsync.html']
+        elif self.action == 'retrieve':            
+            return ['gridsync_singlesite.html']
+
+    # Combine Year and Month into one string (display purposes)
+    def get_year_month_string(self, year, month):
+        year_string = str(year)
+        month_string = str(month)
+        if len(month_string)==1:
+            month_string = '0'+month_string
+        return year_string+ '-' +month_string
+
+    def list(self, request): 
+        last_fetched = GridSiteSync.objects.aggregate(Max('fetched'))['fetched__max']
+        n_sites = GridSiteSync.objects.values('SiteName').distinct().count()
+        
+        if last_fetched is not None:
+            print(last_fetched.replace(tzinfo=None), datetime.today() - timedelta(hours=1, seconds=20))
+        if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)) or n_sites==1:
+            print('Out of date')
+
+            # The condition on EarliestEndTime and LatestEndTime is necessary to avoid error by pytz because of dates like '00-00-00'
+            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE EarliestEndTime>'1900-01-01' AND LatestEndTime>'1900-01-01' GROUP BY Site, Year, Month;")
+            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords GROUP BY Site, Year, Month") 
+
+            # Create empty dicts that will become dfs to be combined
+            Summaries_dict  = {"Site":[], "Month":[], "Year":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]} 
+            SyncRecords_dict  = {"Site":[], "Month":[], "Year":[],"RecordCountInDb":[]} 
+            
+            # Fill the dicts with the fetched data
+            for row in fetchset_Summaries:
+                Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
+                Summaries_dict["Month"] = Summaries_dict.get("Month") + [row.Month]
+                Summaries_dict["Year"] = Summaries_dict.get("Year") + [row.Year]
+                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished")  + [row.RecordCountPublished]  
+                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart")  + [row.RecordStart]    
+                Summaries_dict["RecordEnd"] = Summaries_dict.get("RecordEnd") + [row.RecordEnd]
+
+            for row in fetchset_SyncRecords:
+                SyncRecords_dict["Site"] = SyncRecords_dict.get("Site") + [row.Site]      
+                SyncRecords_dict["Month"] = SyncRecords_dict.get("Month") + [row.Month]  
+                SyncRecords_dict["Year"] = SyncRecords_dict.get("Year") + [row.Year]      
+                SyncRecords_dict["RecordCountInDb"] = SyncRecords_dict.get("RecordCountInDb") + [row.RecordCountInDb]
+
+            # Merge data from VSuperSummaries and VSyncRecords into one df
+            df_Summaries = pd.DataFrame.from_dict(Summaries_dict)
+            df_SyncRecords = pd.DataFrame.from_dict(SyncRecords_dict)
+            df_all = df_Summaries.merge(df_SyncRecords, left_on=['Site', 'Month', 'Year'], right_on=['Site', 'Month', 'Year'], how='inner')
+            fetchset = df_all.to_dict('index')
+
+            # Delete all data if table not empty (as this function lists all sites)
+            GridSiteSync.objects.all().delete()
+
+            # Determine SyncStatus based on the difference between records published and in db
+            for f in fetchset.values():
+                rel_diff1 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountInDb"))
+                rel_diff2 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountPublished"))
+                if rel_diff1 < 0.01 or rel_diff2 < 0.01:
+                    f['SyncStatus']='OK'
+                else:
+                    f['SyncStatus']='Error'
+
+                # Combined primary keys outside the default dict
+                GridSiteSync.objects.update_or_create(
+                    defaults={
+                            'RecordStart': f.get("RecordStart"), 
+                            'RecordEnd': f.get("RecordEnd"), 
+                            'RecordCountPublished': f.get("RecordCountPublished"),
+                            'RecordCountInDb': f.get("RecordCountInDb"), 
+                            'SyncStatus': f.get("SyncStatus"),
+                            }, 
+                    YearMonth = self.get_year_month_string(f.get("Year"), f.get("Month")),
+                    SiteName=f.get("Site"),
+                    Month=f.get("Month"),
+                    Year=f.get("Year"),
+                )
+
+        else:
+            print('No need to update')
+
+        response = super(GridSiteSyncViewSet, self).list(request)
+        response.data = {'records': response.data, 'last_fetched': last_fetched}
+        return response
+
+
+    
+    def retrieve(self, request, SiteName=None):
+        lookup_field = 'SiteName'
+        last_fetched = GridSiteSync.objects.aggregate(Max('fetched'))['fetched__max'] 
+        row_1 = GridSiteSync.objects.filter()[:1].get()
+        n_sites = GridSiteSync.objects.values('SiteName').distinct().count()
+
+        if last_fetched is not None:
+            print(last_fetched.replace(tzinfo=None), datetime.today() - timedelta(hours=1, seconds=20))
+        if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)) or n_sites > 1 or SiteName != row_1.SiteName:
+            print('Out of date')
+
+            # The condition on EarliestEndTime and LatestEndTime is necessary to avoid error by pytz because of dates like '00-00-00'
+            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND EarliestEndTime>'1900-01-01' AND LatestEndTime>'1900-01-01'GROUP BY Site, Month, Year;".format(SiteName))
+            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords WHERE Site='{}' GROUP BY Site, Month, Year;".format(SiteName)) 
+
+            Summaries_dict  = {"Site":[], "Month":[], "Year":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]} 
+            SyncRecords_dict  = {"Site":[], "Month":[], "Year":[], "RecordCountInDb":[]} 
+
+            for row in fetchset_Summaries:
+                Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
+                Summaries_dict["Month"] = Summaries_dict.get("Month") + [row.Month]
+                Summaries_dict["Year"] = Summaries_dict.get("Year") + [row.Year]
+                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished")  + [row.RecordCountPublished]  
+                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart")  + [row.RecordStart]
+                Summaries_dict["RecordEnd"] = Summaries_dict.get("RecordEnd") + [row.RecordEnd]
+
+            for row in fetchset_SyncRecords:
+                SyncRecords_dict["Site"] = SyncRecords_dict.get("Site") + [row.Site]      
+                SyncRecords_dict["Month"] = SyncRecords_dict.get("Month") + [row.Month]   
+                SyncRecords_dict["Year"] = SyncRecords_dict.get("Year") + [row.Year]   
+                SyncRecords_dict["RecordCountInDb"] = SyncRecords_dict.get("RecordCountInDb") + [row.RecordCountInDb]
+
+            df_Summaries = pd.DataFrame.from_dict(Summaries_dict)
+            df_SyncRecords = pd.DataFrame.from_dict(SyncRecords_dict)
+            df_all = df_Summaries.merge(df_SyncRecords, left_on=['Site', 'Month', 'Year'], right_on=['Site', 'Month', 'Year'], how='inner')
+            fetchset = df_all.to_dict('index')
+
+            # Ensure we list only the data for one site
+            first_row = GridSiteSync.objects.first()
+            if first_row is not None:
+                if first_row.SiteName != SiteName:
+                    GridSiteSync.objects.all().delete()
+
+            for f in fetchset.values():
+                rel_diff1 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountInDb"))
+                rel_diff2 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountPublished"))
+                if rel_diff1 <= 0.01 or rel_diff2 <= 0.01:
+                    f['SyncStatus']='OK'
+                else:
+                    f['SyncStatus']='Error'
+
+                GridSiteSync.objects.update_or_create(
+                    defaults={
+                            'RecordStart': f.get("RecordStart"), 
+                            'RecordEnd': f.get("RecordEnd"), 
+                            'RecordCountPublished': f.get("RecordCountPublished"),
+                            'RecordCountInDb': f.get("RecordCountInDb"), 
+                            'SyncStatus': f.get("SyncStatus"),
+                            }, 
+                    YearMonth = self.get_year_month_string(f.get("Year"), f.get("Month")),
+                    SiteName=f.get("Site"),
+                    Month=f.get("Month"),
+                    Year=f.get("Year"),
+                )
+
+        else:
+            print('No need to update')
+
+        response = super(GridSiteSyncViewSet, self).list(request)
+        response.data = {'records': response.data, 'last_fetched': last_fetched}
+        return response
+    
 
 class CloudSiteViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CloudSite.objects.all()
