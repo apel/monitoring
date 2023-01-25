@@ -78,4 +78,20 @@ class VAnonCloudRecord(models.Model):
                                                     self.CloudType,
                                                     self.UpdateTime,
                                                     self.VMs)
+   
                                                     
+class GridSiteSyncSubmitH(models.Model):
+    fetched = models.DateTimeField(auto_now=True)
+    SiteName = models.CharField(max_length=255)
+    YearMonth = models.CharField(max_length=255)
+    Year = models.IntegerField()
+    Month = models.IntegerField()
+    RecordStart = models.DateTimeField()                                                           
+    RecordEnd = models.DateTimeField()  
+    RecordCountPublished = models.IntegerField()
+    RecordCountInDb = models.IntegerField()
+    SubmitHost = models.CharField(max_length=255)
+
+    class Meta:
+        ordering = ('SiteName',  '-Year', '-Month')
+        unique_together = ('SiteName', 'YearMonth', 'SubmitHost')
