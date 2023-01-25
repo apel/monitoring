@@ -11,7 +11,7 @@ class GridSiteSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = GridSite
-        fields = ('url', 'name', 'updated')
+        fields = ('url', 'SiteName', 'updated')
 
 
 class GridSiteSyncSerializer(serializers.HyperlinkedModelSerializer):
@@ -38,4 +38,4 @@ class CloudSiteSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = CloudSite
-        fields = ('url', 'name', 'vms', 'script', 'updated')
+        fields = ('url', 'SiteName', 'Vms', 'Script', 'updated')
