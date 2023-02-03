@@ -15,10 +15,10 @@ class VSuperSummaries(models.Model):
     LatestPublish = models.DateTimeField()
     Month = models.IntegerField()
     Year = models.IntegerField()
-    RecordStart = models.DateTimeField()                                                           
-    RecordEnd = models.DateTimeField()    
-    RecordCountPublished = models.IntegerField()                                                  
-                                                               
+    RecordStart = models.DateTimeField()
+    RecordEnd = models.DateTimeField()
+    RecordCountPublished = models.IntegerField()
+
     class Meta:
         managed = False
         db_table = 'VSuperSummaries'
@@ -30,8 +30,8 @@ class GridSiteSync(models.Model):
     YearMonth = models.CharField(max_length=255)
     Year = models.IntegerField()
     Month = models.IntegerField()
-    RecordStart = models.DateTimeField()                                                           
-    RecordEnd = models.DateTimeField()  
+    RecordStart = models.DateTimeField()
+    RecordEnd = models.DateTimeField()
     RecordCountPublished = models.IntegerField()
     RecordCountInDb = models.IntegerField()
     SyncStatus = models.CharField(max_length=255)
@@ -40,7 +40,7 @@ class GridSiteSync(models.Model):
         # Descending order of Year and Month to display latest data first
         ordering = ('SiteName', '-Year', '-Month')
         unique_together = ('SiteName', 'YearMonth')
-        
+
 
 class VSyncRecords(models.Model):
     Site = models.CharField(max_length=255, primary_key=True)
@@ -78,16 +78,16 @@ class VAnonCloudRecord(models.Model):
                                                     self.CloudType,
                                                     self.UpdateTime,
                                                     self.VMs)
-   
-                                                    
+
+
 class GridSiteSyncSubmitH(models.Model):
     fetched = models.DateTimeField(auto_now=True)
     SiteName = models.CharField(max_length=255)
     YearMonth = models.CharField(max_length=255)
     Year = models.IntegerField()
     Month = models.IntegerField()
-    RecordStart = models.DateTimeField()                                                           
-    RecordEnd = models.DateTimeField()  
+    RecordStart = models.DateTimeField()
+    RecordEnd = models.DateTimeField()
     RecordCountPublished = models.IntegerField()
     RecordCountInDb = models.IntegerField()
     SubmitHost = models.CharField(max_length=255)

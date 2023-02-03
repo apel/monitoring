@@ -49,5 +49,5 @@ class GridSiteSyncSubmitHSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = GridSiteSyncSubmitH
         fields = ('url', 'SiteName', 'YearMonth', 'RecordStart', 'RecordEnd', 'RecordCountPublished', 'RecordCountInDb', 'SubmitHost')
-        
+
         lookup_fields = ('SiteName', 'YearMonth')
