@@ -124,8 +124,8 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords GROUP BY Site, Year, Month")
 
             # Create empty dicts that will become dfs to be combined
-            Summaries_dict = {"Site":[], "Month":[], "Year":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]}
-            SyncRecords_dict = {"Site":[], "Month":[], "Year":[],"RecordCountInDb":[]}
+            Summaries_dict = {"Site": [], "Month": [], "Year": [], "RecordCountPublished": [], "RecordStart": [], "RecordEnd": []}
+            SyncRecords_dict = {"Site": [], "Month": [], "Year": [], "RecordCountInDb": []}
 
             # Fill the dicts with the fetched data
             for row in fetchset_Summaries:
@@ -199,8 +199,8 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND EarliestEndTime>'1900-01-01' AND LatestEndTime>'1900-01-01'GROUP BY Site, Month, Year;".format(SiteName))
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords WHERE Site='{}' GROUP BY Site, Month, Year;".format(SiteName))
 
-            Summaries_dict = {"Site":[], "Month":[], "Year":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]}
-            SyncRecords_dict = {"Site":[], "Month":[], "Year":[], "RecordCountInDb":[]}
+            Summaries_dict = {"Site": [], "Month": [], "Year": [], "RecordCountPublished": [], "RecordStart": [], "RecordEnd": []}
+            SyncRecords_dict = {"Site": [], "Month": [], "Year": [], "RecordCountInDb": []}
 
             for row in fetchset_Summaries:
                 Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
@@ -307,8 +307,8 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
             fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, SubmitHost AS SubmitHostSumm, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb, SubmitHost AS SubmitHostSync FROM VSyncRecords WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
 
-            Summaries_dict = {"Site":[], "Month":[], "Year":[], "SubmitHostSumm":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]}
-            SyncRecords_dict = {"Site":[], "Month":[], "Year":[],"SubmitHostSync":[], "RecordCountInDb":[]}
+            Summaries_dict = {"Site": [], "Month": [], "Year": [], "SubmitHostSumm": [], "RecordCountPublished": [], "RecordStart": [], "RecordEnd": []}
+            SyncRecords_dict = {"Site": [], "Month": [], "Year": [], "SubmitHostSync": [], "RecordCountInDb": []}
 
             for row in fetchset_Summaries:
                 Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
