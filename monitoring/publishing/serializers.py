@@ -1,6 +1,11 @@
 from rest_framework import serializers
 
-from monitoring.publishing.models import CloudSite, GridSite, GridSiteSync, GridSiteSyncSubmitH
+from monitoring.publishing.models import (
+    CloudSite,
+    GridSite,
+    GridSiteSync,
+    GridSiteSyncSubmitH
+)
 
 
 class GridSiteSerializer(serializers.HyperlinkedModelSerializer):
