@@ -99,7 +99,10 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
         if last_fetched is None or (last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20))):
             fetchset = VSuperSummaries.objects.using('grid').raw("SELECT Site, max(LatestEndTime) AS LatestPublish FROM VSuperSummaries WHERE Year=2019 GROUP BY 1;")
             for f in fetchset:
-                GridSite.objects.update_or_create(defaults={'updated': f.LatestPublish}, SiteName=f.Site)
+                GridSite.objects.update_or_create(
+                    defaults={'updated': f.LatestPublish},
+                    SiteName=f.Site
+                )
         else:
             print('No need to update')
 
@@ -138,7 +141,10 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
             print('Out of date')
             fetchset = VSuperSummaries.objects.using('grid').raw("SELECT Site, max(LatestEndTime) AS LatestPublish FROM VSuperSummaries WHERE Year=2019 GROUP BY 1;")
             for f in fetchset:
-                GridSite.objects.update_or_create(defaults={'updated': f.LatestPublish}, SiteName=f.Site)
+                GridSite.objects.update_or_create(
+                    defaults={'updated': f.LatestPublish},
+                    SiteName=f.Site
+                )
         else:
             print('No need to update')
 
@@ -208,7 +214,12 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             # Merge data from VSuperSummaries and VSyncRecords into one df
             df_Summaries = pd.DataFrame.from_dict(summaries_dict)
             df_SyncRecords = pd.DataFrame.from_dict(syncrecords_dict)
-            df_all = df_Summaries.merge(df_SyncRecords, left_on=['Site', 'Month', 'Year'], right_on=['Site', 'Month', 'Year'], how='inner')
+            df_all = df_Summaries.merge(
+                df_SyncRecords,
+                left_on=['Site', 'Month', 'Year'],
+                right_on=['Site', 'Month', 'Year'],
+                how='inner'
+            )
             fetchset = df_all.to_dict('index')
 
             # Delete all data if table not empty (as this function lists all sites)
@@ -275,7 +286,12 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
 
             df_Summaries = pd.DataFrame.from_dict(summaries_dict)
             df_SyncRecords = pd.DataFrame.from_dict(syncrecords_dict)
-            df_all = df_Summaries.merge(df_SyncRecords, left_on=['Site', 'Month', 'Year'], right_on=['Site', 'Month', 'Year'], how='inner')
+            df_all = df_Summaries.merge(
+                df_SyncRecords,
+                left_on=['Site', 'Month', 'Year'],
+                right_on=['Site', 'Month', 'Year'],
+                how='inner'
+            )
             fetchset = df_all.to_dict('index')
 
             # Ensure we list only the data for one site
@@ -385,7 +401,12 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
             df_Summaries.dropna(inplace=True)
             df_SyncRecords.dropna(inplace=True)
 
-            df_all = df_Summaries.merge(df_SyncRecords, left_on=['Site', 'Month', 'Year', 'SubmitHostSumm'], right_on=['Site', 'Month', 'Year', 'SubmitHostSync'], how='outer')
+            df_all = df_Summaries.merge(
+                df_SyncRecords,
+                left_on=['Site', 'Month', 'Year', 'SubmitHostSumm'],
+                right_on=['Site', 'Month', 'Year', 'SubmitHostSync'],
+                how='outer'
+            )
             fetchset = df_all.to_dict('index')
 
             # This is to list only data for one month
@@ -430,7 +451,14 @@ class CloudSiteViewSet(viewsets.ReadOnlyModelViewSet):
             print('Out of date')
             fetchset =  VAnonCloudRecord.objects.using('cloud').raw("SELECT b.SiteName, COUNT(DISTINCT VMUUID) as VMs, CloudType, b.UpdateTime FROM (SELECT SiteName, MAX(UpdateTime) AS latest FROM VAnonCloudRecords WHERE UpdateTime>'2018-07-25' GROUP BY SiteName) AS a INNER JOIN VAnonCloudRecords AS b ON b.SiteName = a.SiteName AND b.UpdateTime = a.latest GROUP BY SiteName")
             for f in fetchset:
-                CloudSite.objects.update_or_create(defaults={'Vms': f.VMs, 'Script': f.CloudType, 'updated': f.UpdateTime}, SiteName=f.SiteName)
+                CloudSite.objects.update_or_create(
+                    defaults={
+                        'Vms': f.VMs,
+                        'Script': f.CloudType,
+                        'updated': f.UpdateTime
+                    },
+                    SiteName=f.SiteName
+                )
         else:
             print('No need to update')
 
@@ -450,7 +478,14 @@ class CloudSiteViewSet(viewsets.ReadOnlyModelViewSet):
             print('Out of date')
             fetchset =  VAnonCloudRecord.objects.using('cloud').raw("SELECT b.SiteName, COUNT(DISTINCT VMUUID) as VMs, CloudType, b.UpdateTime FROM (SELECT SiteName, MAX(UpdateTime) AS latest FROM VAnonCloudRecords WHERE UpdateTime>'2018-07-25' GROUP BY SiteName) AS a INNER JOIN VAnonCloudRecords AS b ON b.SiteName = a.SiteName AND b.UpdateTime = a.latest GROUP BY SiteName")
             for f in fetchset:
-                CloudSite.objects.update_or_create(defaults={'Vms': f.VMs, 'Script': f.CloudType, 'updated': f.UpdateTime}, SiteName=f.SiteName)
+                CloudSite.objects.update_or_create(
+                    defaults={
+                        'Vms': f.VMs,
+                        'Script': f.CloudType,
+                        'updated': f.UpdateTime
+                    },
+                    SiteName=f.SiteName
+                )
         else:
             print('No need to update')
 
