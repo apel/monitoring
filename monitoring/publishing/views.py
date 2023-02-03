@@ -97,7 +97,16 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
         if last_fetched is not None:
             print(last_fetched.replace(tzinfo=None), datetime.today() - timedelta(hours=1, seconds=20))
         if last_fetched is None or (last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20))):
-            fetchset = VSuperSummaries.objects.using('grid').raw("SELECT Site, max(LatestEndTime) AS LatestPublish FROM VSuperSummaries WHERE Year=2019 GROUP BY 1;")
+            sql_query = """
+                SELECT
+                    Site,
+                    max(LatestEndTime) AS LatestPublish
+                FROM VSuperSummaries
+                WHERE Year=2019
+                GROUP BY 1;
+            """
+            fetchset = VSuperSummaries.objects.using('grid').raw(sql_query)
+
             for f in fetchset:
                 GridSite.objects.update_or_create(
                     defaults={'updated': f.LatestPublish},
@@ -139,7 +148,16 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
             print(last_fetched.replace(tzinfo=None), datetime.today() - timedelta(hours=1, seconds=20))
         if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)):
             print('Out of date')
-            fetchset = VSuperSummaries.objects.using('grid').raw("SELECT Site, max(LatestEndTime) AS LatestPublish FROM VSuperSummaries WHERE Year=2019 GROUP BY 1;")
+            sql_query = """
+                SELECT
+                    Site,
+                    max(LatestEndTime) AS LatestPublish
+                FROM VSuperSummaries
+                WHERE Year=2019
+                GROUP BY 1;
+            """
+            fetchset = VSuperSummaries.objects.using('grid').raw(sql_query)
+
             for f in fetchset:
                 GridSite.objects.update_or_create(
                     defaults={'updated': f.LatestPublish},
@@ -196,8 +214,33 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             print('Out of date')
 
             # The condition on EarliestEndTime and LatestEndTime is necessary to avoid error by pytz because of dates like '00-00-00'
-            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE EarliestEndTime>'1900-01-01' AND LatestEndTime>'1900-01-01' GROUP BY Site, Year, Month;")
-            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords GROUP BY Site, Year, Month")
+            sql_query_summaries = """
+                SELECT
+                    Site,
+                    Month, Year,
+                    SUM(NumberOfJobs) AS RecordCountPublished,
+                    MIN(EarliestEndTime) AS RecordStart,
+                    MAX(LatestEndTime) AS RecordEnd
+                FROM VSuperSummaries
+                WHERE
+                    EarliestEndTime>'1900-01-01' AND
+                    LatestEndTime>'1900-01-01'
+                GROUP BY
+                    Site, Year, Month;
+            """
+            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw(sql_query_summaries)
+
+            sql_query_syncrec = """
+                SELECT
+                    Site,
+                    Month,
+                    Year,
+                    SUM(NumberOfJobs) AS RecordCountInDb
+                FROM VSyncRecords
+                GROUP BY
+                    Site, Year, Month;
+            """
+            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw(sql_query_syncrec)
 
             # Create empty dicts that will become dfs to be combined
             summaries_dict = summaries_dict_standard.copy()
@@ -271,8 +314,36 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             print('Out of date')
 
             # The condition on EarliestEndTime and LatestEndTime is necessary to avoid error by pytz because of dates like '00-00-00'
-            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND EarliestEndTime>'1900-01-01' AND LatestEndTime>'1900-01-01'GROUP BY Site, Month, Year;".format(SiteName))
-            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords WHERE Site='{}' GROUP BY Site, Month, Year;".format(SiteName))
+            sql_query_summaries = """
+                SELECT
+                    Site,
+                    Month,
+                    Year,
+                    SUM(NumberOfJobs) AS RecordCountPublished,
+                    MIN(EarliestEndTime) AS RecordStart,
+                    MAX(LatestEndTime) AS RecordEnd
+                FROM VSuperSummaries
+                WHERE
+                    Site='{}' AND
+                    EarliestEndTime>'1900-01-01' AND
+                    LatestEndTime>'1900-01-01'
+                GROUP BY
+                    Site, Year, Month;
+            """.format(SiteName)
+            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw(sql_query_summaries)
+
+            sql_query_syncrecords = """
+                SELECT
+                    Site,
+                    Month,
+                    Year,
+                    SUM(NumberOfJobs) AS RecordCountInDb
+                FROM VSyncRecords
+                WHERE Site='{}'
+                GROUP BY
+                    Site, Year, Month;
+            """.format(SiteName)
+            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw(sql_query_syncrecords)
 
             summaries_dict = summaries_dict_standard.copy()
             syncrecords_dict = syncrecords_dict_standard.copy()
@@ -382,8 +453,39 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
         if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)) or (sitename_in_table != SiteName) or (yearmonth_in_table != YearMonth):
             print('Out of date')
 
-            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, SubmitHost AS SubmitHostSumm, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
-            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb, SubmitHost AS SubmitHostSync FROM VSyncRecords WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
+            sql_query_summaries = """
+                SELECT
+                    Site,
+                    Month,
+                    Year,
+                    SUM(NumberOfJobs) AS RecordCountPublished,
+                    SubmitHost AS SubmitHostSumm,
+                    MIN(EarliestEndTime) AS RecordStart,
+                    MAX(LatestEndTime) AS RecordEnd
+                FROM VSuperSummaries
+                WHERE
+                    Site='{}' AND
+                    Month='{}' AND
+                    Year='{}'
+                GROUP BY SubmitHost;
+            """.format(SiteName, Month, Year)
+            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw(sql_query_summaries)
+
+            sql_query_syncrecords = """
+                SELECT
+                    Site,
+                    Month,
+                    Year,
+                    SUM(NumberOfJobs) AS RecordCountInDb,
+                    SubmitHost AS SubmitHostSync
+                FROM VSyncRecords
+                WHERE
+                    Site='{}' AND
+                    Month='{}' AND
+                    Year='{}'
+                GROUP BY SubmitHost;
+            """.format(SiteName, Month, Year)
+            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw(sql_query_syncrecords)
 
             summaries_dict = summaries_dict_standard.copy()
             syncrecords_dict = syncrecords_dict_standard.copy()
@@ -448,7 +550,29 @@ class CloudSiteViewSet(viewsets.ReadOnlyModelViewSet):
             print(last_fetched.replace(tzinfo=None), datetime.today() - timedelta(hours=1, seconds=20))
         if last_fetched is None or (last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20))):
             print('Out of date')
-            fetchset =  VAnonCloudRecord.objects.using('cloud').raw("SELECT b.SiteName, COUNT(DISTINCT VMUUID) as VMs, CloudType, b.UpdateTime FROM (SELECT SiteName, MAX(UpdateTime) AS latest FROM VAnonCloudRecords WHERE UpdateTime>'2018-07-25' GROUP BY SiteName) AS a INNER JOIN VAnonCloudRecords AS b ON b.SiteName = a.SiteName AND b.UpdateTime = a.latest GROUP BY SiteName")
+
+            sql_query = """
+                SELECT
+                    b.SiteName,
+                    COUNT(DISTINCT VMUUID) as VMs,
+                    CloudType,
+                    b.UpdateTime
+                FROM(
+                    SELECT
+                        SiteName,
+                        MAX(UpdateTime) AS latest
+                    FROM VAnonCloudRecords
+                    WHERE UpdateTime>'2018-07-25'
+                    GROUP BY SiteName
+                )
+                AS a
+                INNER JOIN VAnonCloudRecords
+                AS b
+                ON b.SiteName = a.SiteName AND b.UpdateTime = a.latest
+                GROUP BY SiteName;
+            """
+            fetchset =  VAnonCloudRecord.objects.using('cloud').raw(sql_query)
+
             for f in fetchset:
                 CloudSite.objects.update_or_create(
                     defaults={
