@@ -16,7 +16,11 @@ class GridSiteSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = GridSite
-        fields = ('url', 'SiteName', 'updated')
+        fields = (
+            'url',
+            'SiteName',
+            'updated'
+        )
 
 
 class GridSiteSyncSerializer(serializers.HyperlinkedModelSerializer):
@@ -26,7 +30,16 @@ class GridSiteSyncSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = GridSiteSync
-        fields = ('url', 'SiteName', 'YearMonth', 'RecordStart', 'RecordEnd', 'RecordCountPublished', 'RecordCountInDb', 'SyncStatus')
+        fields = (
+            'url',
+            'SiteName',
+            'YearMonth',
+            'RecordStart',
+            'RecordEnd',
+            'RecordCountPublished',
+            'RecordCountInDb',
+            'SyncStatus'
+        )
 
         # Sitename substitutes pk
         lookup_field = 'SiteName'
@@ -43,7 +56,13 @@ class CloudSiteSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = CloudSite
-        fields = ('url', 'SiteName', 'Vms', 'Script', 'updated')
+        fields = (
+            'url',
+            'SiteName',
+            'Vms',
+            'Script',
+            'updated'
+        )
 
 
 class GridSiteSyncSubmitHSerializer(serializers.HyperlinkedModelSerializer):
@@ -53,6 +72,15 @@ class GridSiteSyncSubmitHSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = GridSiteSyncSubmitH
-        fields = ('url', 'SiteName', 'YearMonth', 'RecordStart', 'RecordEnd', 'RecordCountPublished', 'RecordCountInDb', 'SubmitHost')
+        fields = (
+            'url',
+            'SiteName',
+            'YearMonth',
+            'RecordStart',
+            'RecordEnd',
+            'RecordCountPublished',
+            'RecordCountInDb',
+            'SubmitHost'
+        )
 
         lookup_fields = ('SiteName', 'YearMonth')
