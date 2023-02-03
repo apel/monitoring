@@ -62,7 +62,10 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
             final_response.append(single_dict)
 
         if type(request.accepted_renderer) is TemplateHTMLRenderer:
-            response.data = {'sites': final_response, 'last_fetched': last_fetched}
+            response.data = {
+                'sites': final_response,
+                'last_fetched': last_fetched
+            }
 
         return response
 
@@ -85,7 +88,10 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
         # Wrap data in a dict so that it can display in template.
         if type(request.accepted_renderer) is TemplateHTMLRenderer:
             # Single result put in list to work with same HTML template.
-            response.data = {'sites': [response.data], 'last_fetched': last_fetched}
+            response.data = {
+                'sites': [response.data],
+                'last_fetched': last_fetched
+            }
 
         diff = datetime.today() - date
         if diff <= timedelta(days=7):
@@ -136,8 +142,21 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords GROUP BY Site, Year, Month")
 
             # Create empty dicts that will become dfs to be combined
-            Summaries_dict = {"Site": [], "Month": [], "Year": [], "RecordCountPublished": [], "RecordStart": [], "RecordEnd": []}
-            SyncRecords_dict = {"Site": [], "Month": [], "Year": [], "RecordCountInDb": []}
+            Summaries_dict = {
+                "Site": [],
+                "Month": [],
+                "Year": [],
+                "RecordCountPublished": [],
+                "RecordStart": [],
+                "RecordEnd": []
+            }
+
+            SyncRecords_dict = {
+                "Site": [],
+                "Month": [],
+                "Year": [],
+                "RecordCountInDb": []
+            }
 
             # Fill the dicts with the fetched data
             for row in fetchset_Summaries:
@@ -175,12 +194,12 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                 # Combined primary keys outside the default dict
                 GridSiteSync.objects.update_or_create(
                     defaults={
-                            'RecordStart': f.get("RecordStart"),
-                            'RecordEnd': f.get("RecordEnd"),
-                            'RecordCountPublished': f.get("RecordCountPublished"),
-                            'RecordCountInDb': f.get("RecordCountInDb"),
-                            'SyncStatus': f.get("SyncStatus"),
-                            },
+                        'RecordStart': f.get("RecordStart"),
+                        'RecordEnd': f.get("RecordEnd"),
+                        'RecordCountPublished': f.get("RecordCountPublished"),
+                        'RecordCountInDb': f.get("RecordCountInDb"),
+                        'SyncStatus': f.get("SyncStatus"),
+                    },
                     YearMonth=self.get_year_month_string(f.get("Year"), f.get("Month")),
                     SiteName=f.get("Site"),
                     Month=f.get("Month"),
@@ -191,7 +210,10 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             print('No need to update')
 
         response = super(GridSiteSyncViewSet, self).list(request)
-        response.data = {'records': response.data, 'last_fetched': last_fetched}
+        response.data = {
+            'records': response.data,
+            'last_fetched': last_fetched
+        }
         return response
 
     def retrieve(self, request, SiteName=None):
@@ -209,8 +231,21 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND EarliestEndTime>'1900-01-01' AND LatestEndTime>'1900-01-01'GROUP BY Site, Month, Year;".format(SiteName))
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords WHERE Site='{}' GROUP BY Site, Month, Year;".format(SiteName))
 
-            Summaries_dict = {"Site": [], "Month": [], "Year": [], "RecordCountPublished": [], "RecordStart": [], "RecordEnd": []}
-            SyncRecords_dict = {"Site": [], "Month": [], "Year": [], "RecordCountInDb": []}
+            Summaries_dict = {
+                "Site": [],
+                "Month": [],
+                "Year": [],
+                "RecordCountPublished": [],
+                "RecordStart": [],
+                "RecordEnd": []
+            }
+
+            SyncRecords_dict = {
+                "Site": [],
+                "Month": [],
+                "Year": [],
+                "RecordCountInDb": []
+            }
 
             for row in fetchset_Summaries:
                 Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
@@ -247,12 +282,12 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
 
                 GridSiteSync.objects.update_or_create(
                     defaults={
-                            'RecordStart': f.get("RecordStart"),
-                            'RecordEnd': f.get("RecordEnd"),
-                            'RecordCountPublished': f.get("RecordCountPublished"),
-                            'RecordCountInDb': f.get("RecordCountInDb"),
-                            'SyncStatus': f.get("SyncStatus"),
-                            },
+                        'RecordStart': f.get("RecordStart"),
+                        'RecordEnd': f.get("RecordEnd"),
+                        'RecordCountPublished': f.get("RecordCountPublished"),
+                        'RecordCountInDb': f.get("RecordCountInDb"),
+                        'SyncStatus': f.get("SyncStatus"),
+                    },
                     YearMonth=self.get_year_month_string(f.get("Year"), f.get("Month")),
                     SiteName=f.get("Site"),
                     Month=f.get("Month"),
@@ -263,7 +298,10 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             print('No need to update')
 
         response = super(GridSiteSyncViewSet, self).list(request)
-        response.data = {'records': response.data, 'last_fetched': last_fetched}
+        response.data = {
+            'records': response.data,
+            'last_fetched': last_fetched
+        }
         return response
 
 
@@ -292,7 +330,10 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
 
     def list(self, request):
         response = super(GridSiteSyncSubmitHViewSet, self).list(request)
-        response.data = {'submisthosts': response.data, 'last_fetched': last_fetched}
+        response.data = {
+            'submisthosts': response.data,
+            'last_fetched': last_fetched
+        }
         return response
 
     def retrieve(self, request, SiteName=None, YearMonth=None):
@@ -317,8 +358,23 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
             fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, SubmitHost AS SubmitHostSumm, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb, SubmitHost AS SubmitHostSync FROM VSyncRecords WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
 
-            Summaries_dict = {"Site": [], "Month": [], "Year": [], "SubmitHostSumm": [], "RecordCountPublished": [], "RecordStart": [], "RecordEnd": []}
-            SyncRecords_dict = {"Site": [], "Month": [], "Year": [], "SubmitHostSync": [], "RecordCountInDb": []}
+            Summaries_dict = {
+                "Site": [],
+                "Month": [],
+                "Year": [],
+                "SubmitHostSumm": [],
+                "RecordCountPublished": [],
+                "RecordStart": [],
+                "RecordEnd": []
+            }
+
+            SyncRecords_dict = {
+                "Site": [],
+                "Month": [],
+                "Year": [],
+                "SubmitHostSync": [],
+                "RecordCountInDb": []
+            }
 
             for row in fetchset_Summaries:
                 Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
@@ -357,11 +413,11 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
             for f in fetchset.values():
                 GridSiteSyncSubmitH.objects.update_or_create(
                     defaults={
-                            'RecordStart': f.get("RecordStart"),
-                            'RecordEnd': f.get("RecordEnd"),
-                            'RecordCountPublished': f.get("RecordCountPublished"),
-                            'RecordCountInDb': f.get("RecordCountInDb"),
-                            },
+                        'RecordStart': f.get("RecordStart"),
+                        'RecordEnd': f.get("RecordEnd"),
+                        'RecordCountPublished': f.get("RecordCountPublished"),
+                        'RecordCountInDb': f.get("RecordCountInDb"),
+                    },
                     SiteName=f.get("Site"),
                     YearMonth=get_year_month_string(f.get("Year"), f.get("Month")),
                     Month=f.get("Month"),
@@ -373,7 +429,10 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
             print('No need to update')
 
         response = super(GridSiteSyncSubmitHViewSet, self).list(request)
-        response.data = {'submisthosts': response.data, 'last_fetched': last_fetched}
+        response.data = {
+            'submisthosts': response.data,
+            'last_fetched': last_fetched
+        }
         return response
 
 
@@ -397,7 +456,10 @@ class CloudSiteViewSet(viewsets.ReadOnlyModelViewSet):
         response = super(CloudSiteViewSet, self).list(request)
         # Wrap data in a dict so that it can display in template.
         if type(request.accepted_renderer) is TemplateHTMLRenderer:
-            response.data = {'sites': response.data, 'last_fetched': last_fetched}
+            response.data = {
+                'sites': response.data,
+                'last_fetched': last_fetched
+            }
         return response
 
     def retrieve(self, request, pk=None):
@@ -415,7 +477,10 @@ class CloudSiteViewSet(viewsets.ReadOnlyModelViewSet):
         # Wrap data in a dict so that it can display in template.
         if type(request.accepted_renderer) is TemplateHTMLRenderer:
             # Single result put in list to work with same HTML template.
-            response.data = {'sites': [response.data], 'last_fetched': last_fetched}
+            response.data = {
+                'sites': [response.data],
+                'last_fetched': last_fetched
+            }
 
         response.data['returncode'] = 3
         response.data['stdout'] = "UNKNOWN"
