@@ -26,6 +26,57 @@ from monitoring.publishing.serializers import (
     GridSiteSyncSubmitHSerializer
 )
 
+summaries_dict_standard = {
+    "Site": [],
+    "Month": [],
+    "Year": [],
+    "RecordCountPublished": [],
+    "RecordStart": [],
+    "RecordEnd": [],
+    "SubmitHostSumm": [],
+}
+
+syncrecords_dict_standard = {
+    "Site": [],
+    "Month": [],
+    "Year": [],
+    "RecordCountInDb": [],
+    "SubmitHostSync": []
+}
+
+
+def fill_summaries_dict(inpDict, row):
+    inpDict["Site"] = inpDict.get("Site") + [row.Site]
+    inpDict["Month"] = inpDict.get("Month") + [row.Month]
+    inpDict["Year"] = inpDict.get("Year") + [row.Year]
+    inpDict["RecordCountPublished"] = inpDict.get("RecordCountPublished") + [row.RecordCountPublished]
+    inpDict["RecordStart"] = inpDict.get("RecordStart") + [row.RecordStart]
+    inpDict["RecordEnd"] = inpDict.get("RecordEnd") + [row.RecordEnd]
+    if hasattr(row, "SubmitHostSumm"):
+        inpDict["SubmitHostSumm"] = inpDict.get("SubmitHostSumm") + [row.SubmitHostSumm]
+
+    return inpDict
+
+
+def fill_syncrecords_dict(inpDict, row):
+    inpDict["Site"] = inpDict.get("Site") + [row.Site]
+    inpDict["Month"] = inpDict.get("Month") + [row.Month]
+    inpDict["Year"] = inpDict.get("Year") + [row.Year]
+    inpDict["RecordCountInDb"] = inpDict.get("RecordCountInDb") + [row.RecordCountInDb]
+    if hasattr(row, "SubmitHostSync"):
+        inpDict["SubmitHostSync"] = inpDict.get("SubmitHostSync") + [row.SubmitHostSync]
+    return inpDict
+
+
+def correct_dict(inpDict):
+    keys_to_remove = []
+    for key, val in inpDict.items():
+        if len(val) == 0:
+            keys_to_remove.append(key)
+    for key in keys_to_remove:
+        inpDict.pop(key)
+    return inpDict
+
 
 class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = GridSite.objects.all()
@@ -142,40 +193,20 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords GROUP BY Site, Year, Month")
 
             # Create empty dicts that will become dfs to be combined
-            Summaries_dict = {
-                "Site": [],
-                "Month": [],
-                "Year": [],
-                "RecordCountPublished": [],
-                "RecordStart": [],
-                "RecordEnd": []
-            }
-
-            SyncRecords_dict = {
-                "Site": [],
-                "Month": [],
-                "Year": [],
-                "RecordCountInDb": []
-            }
+            summaries_dict = summaries_dict_standard.copy()
+            syncrecords_dict = syncrecords_dict_standard.copy()
 
             # Fill the dicts with the fetched data
             for row in fetchset_Summaries:
-                Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
-                Summaries_dict["Month"] = Summaries_dict.get("Month") + [row.Month]
-                Summaries_dict["Year"] = Summaries_dict.get("Year") + [row.Year]
-                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished") + [row.RecordCountPublished]
-                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart") + [row.RecordStart]
-                Summaries_dict["RecordEnd"] = Summaries_dict.get("RecordEnd") + [row.RecordEnd]
-
+                summaries_dict = fill_summaries_dict(summaries_dict, row)
+                summaries_dict = correct_dict(summaries_dict)
             for row in fetchset_SyncRecords:
-                SyncRecords_dict["Site"] = SyncRecords_dict.get("Site") + [row.Site]
-                SyncRecords_dict["Month"] = SyncRecords_dict.get("Month") + [row.Month]
-                SyncRecords_dict["Year"] = SyncRecords_dict.get("Year") + [row.Year]
-                SyncRecords_dict["RecordCountInDb"] = SyncRecords_dict.get("RecordCountInDb") + [row.RecordCountInDb]
+                syncrecords_dict = fill_syncrecords_dict(syncrecords_dict, row)
+                syncrecords_dict = correct_dict(syncrecords_dict)
 
             # Merge data from VSuperSummaries and VSyncRecords into one df
-            df_Summaries = pd.DataFrame.from_dict(Summaries_dict)
-            df_SyncRecords = pd.DataFrame.from_dict(SyncRecords_dict)
+            df_Summaries = pd.DataFrame.from_dict(summaries_dict)
+            df_SyncRecords = pd.DataFrame.from_dict(syncrecords_dict)
             df_all = df_Summaries.merge(df_SyncRecords, left_on=['Site', 'Month', 'Year'], right_on=['Site', 'Month', 'Year'], how='inner')
             fetchset = df_all.to_dict('index')
 
@@ -231,38 +262,18 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND EarliestEndTime>'1900-01-01' AND LatestEndTime>'1900-01-01'GROUP BY Site, Month, Year;".format(SiteName))
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords WHERE Site='{}' GROUP BY Site, Month, Year;".format(SiteName))
 
-            Summaries_dict = {
-                "Site": [],
-                "Month": [],
-                "Year": [],
-                "RecordCountPublished": [],
-                "RecordStart": [],
-                "RecordEnd": []
-            }
-
-            SyncRecords_dict = {
-                "Site": [],
-                "Month": [],
-                "Year": [],
-                "RecordCountInDb": []
-            }
+            summaries_dict = summaries_dict_standard.copy()
+            syncrecords_dict = syncrecords_dict_standard.copy()
 
             for row in fetchset_Summaries:
-                Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
-                Summaries_dict["Month"] = Summaries_dict.get("Month") + [row.Month]
-                Summaries_dict["Year"] = Summaries_dict.get("Year") + [row.Year]
-                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished") + [row.RecordCountPublished]
-                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart") + [row.RecordStart]
-                Summaries_dict["RecordEnd"] = Summaries_dict.get("RecordEnd") + [row.RecordEnd]
-
+                summaries_dict = fill_summaries_dict(summaries_dict, row)
+                summaries_dict = correct_dict(summaries_dict)
             for row in fetchset_SyncRecords:
-                SyncRecords_dict["Site"] = SyncRecords_dict.get("Site") + [row.Site]
-                SyncRecords_dict["Month"] = SyncRecords_dict.get("Month") + [row.Month]
-                SyncRecords_dict["Year"] = SyncRecords_dict.get("Year") + [row.Year]
-                SyncRecords_dict["RecordCountInDb"] = SyncRecords_dict.get("RecordCountInDb") + [row.RecordCountInDb]
+                syncrecords_dict = fill_syncrecords_dict(syncrecords_dict, row)
+                syncrecords_dict = correct_dict(syncrecords_dict)
 
-            df_Summaries = pd.DataFrame.from_dict(Summaries_dict)
-            df_SyncRecords = pd.DataFrame.from_dict(SyncRecords_dict)
+            df_Summaries = pd.DataFrame.from_dict(summaries_dict)
+            df_SyncRecords = pd.DataFrame.from_dict(syncrecords_dict)
             df_all = df_Summaries.merge(df_SyncRecords, left_on=['Site', 'Month', 'Year'], right_on=['Site', 'Month', 'Year'], how='inner')
             fetchset = df_all.to_dict('index')
 
@@ -358,42 +369,18 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
             fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, SubmitHost AS SubmitHostSumm, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb, SubmitHost AS SubmitHostSync FROM VSyncRecords WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
 
-            Summaries_dict = {
-                "Site": [],
-                "Month": [],
-                "Year": [],
-                "SubmitHostSumm": [],
-                "RecordCountPublished": [],
-                "RecordStart": [],
-                "RecordEnd": []
-            }
-
-            SyncRecords_dict = {
-                "Site": [],
-                "Month": [],
-                "Year": [],
-                "SubmitHostSync": [],
-                "RecordCountInDb": []
-            }
+            summaries_dict = summaries_dict_standard.copy()
+            syncrecords_dict = syncrecords_dict_standard.copy()
 
             for row in fetchset_Summaries:
-                Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
-                Summaries_dict["Month"] = Summaries_dict.get("Month") + [row.Month]
-                Summaries_dict["Year"] = Summaries_dict.get("Year") + [row.Year]
-                Summaries_dict["SubmitHostSumm"] = Summaries_dict.get("SubmitHostSumm") + [row.SubmitHostSumm]
-                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished") + [row.RecordCountPublished]
-                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart") + [row.RecordStart]
-                Summaries_dict["RecordEnd"] = Summaries_dict.get("RecordEnd") + [row.RecordEnd]
-
+                summaries_dict = fill_summaries_dict(summaries_dict, row)
+                summaries_dict = correct_dict(summaries_dict)
             for row in fetchset_SyncRecords:
-                SyncRecords_dict["Site"] = SyncRecords_dict.get("Site") + [row.Site]
-                SyncRecords_dict["Month"] = SyncRecords_dict.get("Month") + [row.Month]
-                SyncRecords_dict["Year"] = SyncRecords_dict.get("Year") + [row.Year]
-                SyncRecords_dict["SubmitHostSync"] = SyncRecords_dict.get("SubmitHostSync") + [row.SubmitHostSync]
-                SyncRecords_dict["RecordCountInDb"] = SyncRecords_dict.get("RecordCountInDb") + [row.RecordCountInDb]
+                syncrecords_dict = fill_syncrecords_dict(syncrecords_dict, row)
+                syncrecords_dict = correct_dict(syncrecords_dict)
 
-            df_Summaries = pd.DataFrame.from_dict(Summaries_dict)
-            df_SyncRecords = pd.DataFrame.from_dict(SyncRecords_dict)
+            df_Summaries = pd.DataFrame.from_dict(summaries_dict)
+            df_SyncRecords = pd.DataFrame.from_dict(syncrecords_dict)
             df_Summaries.dropna(inplace=True)
             df_SyncRecords.dropna(inplace=True)
 
