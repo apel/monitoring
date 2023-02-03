@@ -52,7 +52,6 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
 
         return response
 
-
     def retrieve(self, request, pk=None):
         last_fetched = GridSite.objects.aggregate(Max('fetched'))['fetched__max']
         # If there's no data then last_fetched is None.
@@ -86,7 +85,6 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
             response.data['stdout'] = "UNKNOWN"
 
         return response
-
 
 
 class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
@@ -181,8 +179,6 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
         response = super(GridSiteSyncViewSet, self).list(request)
         response.data = {'records': response.data, 'last_fetched': last_fetched}
         return response
-
-
 
     def retrieve(self, request, SiteName=None):
         lookup_field = 'SiteName'
@@ -365,7 +361,6 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
         response = super(GridSiteSyncSubmitHViewSet, self).list(request)
         response.data = {'submisthosts': response.data, 'last_fetched': last_fetched}
         return response
-
 
 
 class CloudSiteViewSet(viewsets.ReadOnlyModelViewSet):
