@@ -124,16 +124,16 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords GROUP BY Site, Year, Month")
 
             # Create empty dicts that will become dfs to be combined
-            Summaries_dict  = {"Site":[], "Month":[], "Year":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]}
-            SyncRecords_dict  = {"Site":[], "Month":[], "Year":[],"RecordCountInDb":[]}
+            Summaries_dict = {"Site":[], "Month":[], "Year":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]}
+            SyncRecords_dict = {"Site":[], "Month":[], "Year":[],"RecordCountInDb":[]}
 
             # Fill the dicts with the fetched data
             for row in fetchset_Summaries:
                 Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
                 Summaries_dict["Month"] = Summaries_dict.get("Month") + [row.Month]
                 Summaries_dict["Year"] = Summaries_dict.get("Year") + [row.Year]
-                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished")  + [row.RecordCountPublished]
-                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart")  + [row.RecordStart]
+                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished") + [row.RecordCountPublished]
+                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart") + [row.RecordStart]
                 Summaries_dict["RecordEnd"] = Summaries_dict.get("RecordEnd") + [row.RecordEnd]
 
             for row in fetchset_SyncRecords:
@@ -199,15 +199,15 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
             fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND EarliestEndTime>'1900-01-01' AND LatestEndTime>'1900-01-01'GROUP BY Site, Month, Year;".format(SiteName))
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb FROM VSyncRecords WHERE Site='{}' GROUP BY Site, Month, Year;".format(SiteName))
 
-            Summaries_dict  = {"Site":[], "Month":[], "Year":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]}
-            SyncRecords_dict  = {"Site":[], "Month":[], "Year":[], "RecordCountInDb":[]}
+            Summaries_dict = {"Site":[], "Month":[], "Year":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]}
+            SyncRecords_dict = {"Site":[], "Month":[], "Year":[], "RecordCountInDb":[]}
 
             for row in fetchset_Summaries:
                 Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
                 Summaries_dict["Month"] = Summaries_dict.get("Month") + [row.Month]
                 Summaries_dict["Year"] = Summaries_dict.get("Year") + [row.Year]
-                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished")  + [row.RecordCountPublished]
-                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart")  + [row.RecordStart]
+                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished") + [row.RecordCountPublished]
+                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart") + [row.RecordStart]
                 Summaries_dict["RecordEnd"] = Summaries_dict.get("RecordEnd") + [row.RecordEnd]
 
             for row in fetchset_SyncRecords:
@@ -301,22 +301,22 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
 
         if last_fetched is not None:
             print(last_fetched.replace(tzinfo=None), datetime.today() - timedelta(hours=1, seconds=20))
-        if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)) or (sitename_in_table!=SiteName) or (yearmonth_in_table!=YearMonth) :
+        if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)) or (sitename_in_table!=SiteName) or (yearmonth_in_table!=YearMonth):
             print('Out of date')
 
             fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, SubmitHost AS SubmitHostSumm, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
             fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountInDb, SubmitHost AS SubmitHostSync FROM VSyncRecords WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
 
-            Summaries_dict  = {"Site":[], "Month":[], "Year":[], "SubmitHostSumm":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]}
-            SyncRecords_dict  = {"Site":[], "Month":[], "Year":[],"SubmitHostSync":[], "RecordCountInDb":[]}
+            Summaries_dict = {"Site":[], "Month":[], "Year":[], "SubmitHostSumm":[], "RecordCountPublished":[],"RecordStart":[], "RecordEnd":[]}
+            SyncRecords_dict = {"Site":[], "Month":[], "Year":[],"SubmitHostSync":[], "RecordCountInDb":[]}
 
             for row in fetchset_Summaries:
                 Summaries_dict["Site"] = Summaries_dict.get("Site") + [row.Site]
                 Summaries_dict["Month"] = Summaries_dict.get("Month") + [row.Month]
                 Summaries_dict["Year"] = Summaries_dict.get("Year") + [row.Year]
                 Summaries_dict["SubmitHostSumm"] = Summaries_dict.get("SubmitHostSumm") + [row.SubmitHostSumm]
-                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished")  + [row.RecordCountPublished]
-                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart")  + [row.RecordStart]
+                Summaries_dict["RecordCountPublished"] = Summaries_dict.get("RecordCountPublished") + [row.RecordCountPublished]
+                Summaries_dict["RecordStart"] = Summaries_dict.get("RecordStart") + [row.RecordStart]
                 Summaries_dict["RecordEnd"] = Summaries_dict.get("RecordEnd") + [row.RecordEnd]
 
             for row in fetchset_SyncRecords:
