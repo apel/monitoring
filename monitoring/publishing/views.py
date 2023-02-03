@@ -296,9 +296,8 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
 
             # Ensure we list only the data for one site
             first_row = GridSiteSync.objects.first()
-            if first_row is not None:
-                if first_row.SiteName != SiteName:
-                    GridSiteSync.objects.all().delete()
+            if hasattr(first_row, "SiteName") and first_row.SiteName != SiteName:
+                GridSiteSync.objects.all().delete()
 
             for f in fetchset.values():
                 rel_diff1 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountInDb"))
