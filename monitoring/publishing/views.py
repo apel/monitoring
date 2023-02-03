@@ -106,9 +106,9 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
     def get_year_month_string(self, year, month):
         year_string = str(year)
         month_string = str(month)
-        if len(month_string)==1:
-            month_string = '0'+month_string
-        return year_string+ '-' +month_string
+        if len(month_string) == 1:
+            month_string = '0' + month_string
+        return year_string + '-' + month_string
 
     def list(self, request):
         last_fetched = GridSiteSync.objects.aggregate(Max('fetched'))['fetched__max']
@@ -116,7 +116,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
 
         if last_fetched is not None:
             print(last_fetched.replace(tzinfo=None), datetime.today() - timedelta(hours=1, seconds=20))
-        if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)) or n_sites==1:
+        if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)) or n_sites == 1:
             print('Out of date')
 
             # The condition on EarliestEndTime and LatestEndTime is necessary to avoid error by pytz because of dates like '00-00-00'
@@ -156,9 +156,9 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                 rel_diff1 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountInDb"))
                 rel_diff2 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountPublished"))
                 if rel_diff1 < 0.01 or rel_diff2 < 0.01:
-                    f['SyncStatus']='OK'
+                    f['SyncStatus'] = 'OK'
                 else:
-                    f['SyncStatus']='Error'
+                    f['SyncStatus'] = 'Error'
 
                 # Combined primary keys outside the default dict
                 GridSiteSync.objects.update_or_create(
@@ -231,9 +231,9 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                 rel_diff1 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountInDb"))
                 rel_diff2 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountPublished"))
                 if rel_diff1 <= 0.01 or rel_diff2 <= 0.01:
-                    f['SyncStatus']='OK'
+                    f['SyncStatus'] = 'OK'
                 else:
-                    f['SyncStatus']='Error'
+                    f['SyncStatus'] = 'Error'
 
                 GridSiteSync.objects.update_or_create(
                     defaults={
@@ -301,7 +301,7 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
 
         if last_fetched is not None:
             print(last_fetched.replace(tzinfo=None), datetime.today() - timedelta(hours=1, seconds=20))
-        if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)) or (sitename_in_table!=SiteName) or (yearmonth_in_table!=YearMonth):
+        if last_fetched is None or last_fetched.replace(tzinfo=None) < (datetime.today() - timedelta(hours=1, seconds=20)) or (sitename_in_table != SiteName) or (yearmonth_in_table != YearMonth):
             print('Out of date')
 
             fetchset_Summaries = VSuperSummaries.objects.using('apel').raw("SELECT Site, Month, Year, SUM(NumberOfJobs) AS RecordCountPublished, SubmitHost AS SubmitHostSumm, MIN(EarliestEndTime) AS RecordStart, MAX(LatestEndTime) AS RecordEnd FROM VSuperSummaries WHERE Site='{}' AND Month='{}' AND Year='{}' GROUP BY SubmitHost;".format(SiteName, Month, Year))
@@ -340,9 +340,9 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
             def get_year_month_string(year, month):
                 year_string = str(year)
                 month_string = str(month)
-                if len(month_string)==1:
-                    month_string = '0'+month_string
-                return year_string+ '-' +month_string
+                if len(month_string) == 1:
+                    month_string = '0' + month_string
+                return year_string + '-' + month_string
 
             for f in fetchset.values():
                 GridSiteSyncSubmitH.objects.update_or_create(
