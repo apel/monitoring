@@ -78,6 +78,18 @@ def correct_dict(inpDict):
     return inpDict
 
 
+def determine_sync_status(f):
+    RecordCountPublished = f.get("RecordCountPublished")
+    RecordCountInDb = f.get("RecordCountInDb")
+    rel_diff1 = abs(RecordCountPublished - RecordCountInDb)/RecordCountInDb
+    rel_diff2 = abs(RecordCountPublished - RecordCountInDb)/RecordCountPublished
+    if rel_diff1 < 0.01 or rel_diff2 < 0.01:
+        syncstatus = 'OK'
+    else:
+        syncstatus = 'Error'
+    return syncstatus
+
+
 # Combine Year and Month into one string (display purposes)
 def get_year_month_str(year, month):
     year_string = str(year)
@@ -270,12 +282,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
 
             # Determine SyncStatus based on the difference between records published and in db
             for f in fetchset.values():
-                rel_diff1 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountInDb"))
-                rel_diff2 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountPublished"))
-                if rel_diff1 < 0.01 or rel_diff2 < 0.01:
-                    f['SyncStatus'] = 'OK'
-                else:
-                    f['SyncStatus'] = 'Error'
+                f['SyncStatus'] = determine_sync_status(f)
 
                 # Combined primary keys outside the default dict
                 GridSiteSync.objects.update_or_create(
@@ -371,12 +378,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                 GridSiteSync.objects.all().delete()
 
             for f in fetchset.values():
-                rel_diff1 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountInDb"))
-                rel_diff2 = abs(f.get("RecordCountPublished") - f.get("RecordCountInDb"))/(f.get("RecordCountPublished"))
-                if rel_diff1 <= 0.01 or rel_diff2 <= 0.01:
-                    f['SyncStatus'] = 'OK'
-                else:
-                    f['SyncStatus'] = 'Error'
+                f['SyncStatus'] = determine_sync_status(f)
 
                 GridSiteSync.objects.update_or_create(
                     defaults={
