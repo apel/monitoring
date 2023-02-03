@@ -169,7 +169,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                             'RecordCountInDb': f.get("RecordCountInDb"),
                             'SyncStatus': f.get("SyncStatus"),
                             },
-                    YearMonth = self.get_year_month_string(f.get("Year"), f.get("Month")),
+                    YearMonth=self.get_year_month_string(f.get("Year"), f.get("Month")),
                     SiteName=f.get("Site"),
                     Month=f.get("Month"),
                     Year=f.get("Year"),
@@ -243,7 +243,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                             'RecordCountInDb': f.get("RecordCountInDb"),
                             'SyncStatus': f.get("SyncStatus"),
                             },
-                    YearMonth = self.get_year_month_string(f.get("Year"), f.get("Month")),
+                    YearMonth=self.get_year_month_string(f.get("Year"), f.get("Month")),
                     SiteName=f.get("Site"),
                     Month=f.get("Month"),
                     Year=f.get("Year"),
@@ -353,10 +353,10 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
                             'RecordCountInDb': f.get("RecordCountInDb"),
                             },
                     SiteName=f.get("Site"),
-                    YearMonth = get_year_month_string(f.get("Year"), f.get("Month")),
+                    YearMonth=get_year_month_string(f.get("Year"), f.get("Month")),
                     Month=f.get("Month"),
                     Year=f.get("Year"),
-                    SubmitHost = f.get("SubmitHostSumm"),
+                    SubmitHost=f.get("SubmitHostSumm"),
                 )
 
         else:
