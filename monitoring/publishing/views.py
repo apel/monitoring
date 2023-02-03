@@ -78,6 +78,15 @@ def correct_dict(inpDict):
     return inpDict
 
 
+# Combine Year and Month into one string (display purposes)
+def get_year_month_str(year, month):
+    year_string = str(year)
+    month_string = str(month)
+    if len(month_string) == 1:
+        month_string = '0' + month_string
+    return year_string + '-' + month_string
+
+
 class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = GridSite.objects.all()
     serializer_class = GridSiteSerializer
@@ -171,14 +180,6 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
         elif self.action == 'retrieve':
             return ['gridsync_singlesite.html']
 
-    # Combine Year and Month into one string (display purposes)
-    def get_year_month_string(self, year, month):
-        year_string = str(year)
-        month_string = str(month)
-        if len(month_string) == 1:
-            month_string = '0' + month_string
-        return year_string + '-' + month_string
-
     def list(self, request):
         last_fetched = GridSiteSync.objects.aggregate(Max('fetched'))['fetched__max']
         n_sites = GridSiteSync.objects.values('SiteName').distinct().count()
@@ -231,7 +232,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                         'RecordCountInDb': f.get("RecordCountInDb"),
                         'SyncStatus': f.get("SyncStatus"),
                     },
-                    YearMonth=self.get_year_month_string(f.get("Year"), f.get("Month")),
+                    YearMonth=get_year_month_str(f.get("Year"), f.get("Month")),
                     SiteName=f.get("Site"),
                     Month=f.get("Month"),
                     Year=f.get("Year"),
@@ -299,7 +300,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                         'RecordCountInDb': f.get("RecordCountInDb"),
                         'SyncStatus': f.get("SyncStatus"),
                     },
-                    YearMonth=self.get_year_month_string(f.get("Year"), f.get("Month")),
+                    YearMonth=get_year_month_str(f.get("Year"), f.get("Month")),
                     SiteName=f.get("Site"),
                     Month=f.get("Month"),
                     Year=f.get("Year"),
@@ -390,13 +391,6 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
             # This is to list only data for one month
             GridSiteSyncSubmitH.objects.all().delete()
 
-            def get_year_month_string(year, month):
-                year_string = str(year)
-                month_string = str(month)
-                if len(month_string) == 1:
-                    month_string = '0' + month_string
-                return year_string + '-' + month_string
-
             for f in fetchset.values():
                 GridSiteSyncSubmitH.objects.update_or_create(
                     defaults={
@@ -406,7 +400,7 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
                         'RecordCountInDb': f.get("RecordCountInDb"),
                     },
                     SiteName=f.get("Site"),
-                    YearMonth=get_year_month_string(f.get("Year"), f.get("Month")),
+                    YearMonth=get_year_month_str(f.get("Year"), f.get("Month")),
                     Month=f.get("Month"),
                     Year=f.get("Year"),
                     SubmitHost=f.get("SubmitHostSumm"),
