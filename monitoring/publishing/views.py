@@ -45,6 +45,22 @@ syncrecords_dict_standard = {
 }
 
 
+def update_dict_stdout_and_returncode(single_dict, date):
+    diff = datetime.today() - date
+    date = date.strftime("%Y-%m-%d")
+
+    if diff <= timedelta(days=7):
+        single_dict['returncode'] = 0
+        single_dict['stdout'] = "OK [ last published %s days ago: %s ]" % (diff.days, date)
+    elif diff > timedelta(days=7):
+        single_dict['returncode'] = 1
+        single_dict['stdout'] = "WARNING [ last published %s days ago: %s ]" % (diff.days, date)
+    else:
+        single_dict['returncode'] = 3
+        single_dict['stdout'] = "UNKNOWN"
+    return single_dict
+
+
 def fill_summaries_dict(inpDict, row):
     inpDict["Site"] = inpDict.get("Site") + [row.Site]
     inpDict["Month"] = inpDict.get("Month") + [row.Month]
@@ -132,17 +148,7 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
 
         for single_dict in response.data:
             date = single_dict.get('updated').replace(tzinfo=None)
-
-            diff = datetime.today() - date
-            if diff <= timedelta(days=7):
-                single_dict['returncode'] = 0
-                single_dict['stdout'] = "OK [ last published %s days ago: %s ]" % (diff.days, date.strftime("%Y-%m-%d"))
-            elif diff > timedelta(days=7):
-                single_dict['returncode'] = 1
-                single_dict['stdout'] = "WARNING [ last published %s days ago: %s ]" % (diff.days, date.strftime("%Y-%m-%d"))
-            else:
-                single_dict['returncode'] = 3
-                single_dict['stdout'] = "UNKNOWN"
+            single_dict = update_dict_stdout_and_returncode(single_dict, date)
             final_response.append(single_dict)
 
         if type(request.accepted_renderer) is TemplateHTMLRenderer:
@@ -189,17 +195,7 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
                 'last_fetched': last_fetched
             }
 
-        diff = datetime.today() - date
-        if diff <= timedelta(days=7):
-            response.data['returncode'] = 0
-            response.data['stdout'] = "OK [ last published %s days ago: %s ]" % (diff.days, date.strftime("%Y-%m-%d"))
-        elif diff > timedelta(days=7):
-            response.data['returncode'] = 1
-            response.data['stdout'] = "WARNING [ last published %s days ago: %s ]" % (diff.days, date.strftime("%Y-%m-%d"))
-        else:
-            response.data['returncode'] = 3
-            response.data['stdout'] = "UNKNOWN"
-
+        response.data = update_dict_stdout_and_returncode(response.data, date)
         return response
 
 
