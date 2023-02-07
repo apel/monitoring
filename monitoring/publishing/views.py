@@ -62,12 +62,19 @@ def update_dict_stdout_and_returncode(single_dict, date):
 
 
 def fill_summaries_dict(inpDict, row):
-    inpDict["Site"] = inpDict.get("Site") + [row.Site]
-    inpDict["Month"] = inpDict.get("Month") + [row.Month]
-    inpDict["Year"] = inpDict.get("Year") + [row.Year]
-    inpDict["RecordCountPublished"] = inpDict.get("RecordCountPublished") + [row.RecordCountPublished]
-    inpDict["RecordStart"] = inpDict.get("RecordStart") + [row.RecordStart]
-    inpDict["RecordEnd"] = inpDict.get("RecordEnd") + [row.RecordEnd]
+
+    fields_to_update_and_value_to_add = {
+        "Site": row.Site,
+        "Month": row.Month,
+        "Year": row.Year,
+        "RecordCountPublished": row.RecordCountPublished,
+        "RecordStart": row.RecordStart,
+        "RecordEnd": row.RecordEnd,
+    }
+
+    for field, value in fields_to_update_and_value_to_add.items():
+        inpDict[field] = inpDict.get(field) + [value]
+
     if hasattr(row, "SubmitHostSumm"):
         inpDict["SubmitHostSumm"] = inpDict.get("SubmitHostSumm") + [row.SubmitHostSumm]
 
@@ -440,7 +447,7 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
         sitename_in_table = None
         yearmonth_in_table = None
 
-        # This is to ensure the data is updated when changing (or clicking on another) month
+        # This is to ensure the data is updated when changing month
         if GridSiteSyncSubmitH.objects.count() > 0:
             row_1 = GridSiteSyncSubmitH.objects.filter()[:1].get()
             sitename_in_table = row_1.SiteName
