@@ -25,4 +25,3 @@ If this happens, just follow these steps on the machine:
 3. sudo chown apache .
 
 Note that step 2 is necessary for step 3 to work and the error message to disappear.
-
