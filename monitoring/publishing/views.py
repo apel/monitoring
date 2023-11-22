@@ -108,9 +108,9 @@ def determine_sync_status(f):
     rel_diff1 = abs(RecordCountPublished - RecordCountInDb)/RecordCountInDb
     rel_diff2 = abs(RecordCountPublished - RecordCountInDb)/RecordCountPublished
     if rel_diff1 < 0.01 or rel_diff2 < 0.01:
-        syncstatus = 'OK'
+        syncstatus = "OK"
     else:
-        syncstatus = 'Error'
+        syncstatus = "ERROR [ Please use the Gap Publisher to synchronise this dataset]"
     return syncstatus
 
 
