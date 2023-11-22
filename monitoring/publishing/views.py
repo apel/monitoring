@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from datetime import datetime, timedelta
 
 from django.db.models import Max
+from django.shortcuts import get_object_or_404
 import pandas as pd
 
 from rest_framework import viewsets, generics
@@ -432,6 +433,7 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
     template_name = 'gridsync_submithost.html'
 
     def list(self, request):
+        last_fetched = GridSiteSyncSubmitH.objects.aggregate(Max('fetched'))['fetched__max']
         response = super(GridSiteSyncSubmitHViewSet, self).list(request)
         response.data = {
             'submisthosts': response.data,
