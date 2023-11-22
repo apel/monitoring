@@ -25,7 +25,7 @@ SECRET_KEY = 'ge^fd9rf)htmxji8kf=jk8frh3=^11@^n=h14gu*fqt^0-lnr$'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -91,17 +91,19 @@ DATABASES = {
     },
     'grid': {
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': 'localhost',
+        'HOST': '',
         'PORT': '3306',
-        'NAME': 'django_test_grid',
-        'USER': 'root',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': '',
     },
     'cloud': {
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': 'localhost',
+        'HOST': '',
         'PORT': '3306',
-        'NAME': 'django_test',
-        'USER': 'root',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': '',
     },
 }
 
