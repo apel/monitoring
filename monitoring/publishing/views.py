@@ -244,7 +244,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                 GROUP BY
                     Site, Year, Month;
             """
-            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw(sql_query_summaries)
+            fetchset_Summaries = VSuperSummaries.objects.using('grid').raw(sql_query_summaries)
 
             sql_query_syncrec = """
                 SELECT
@@ -256,7 +256,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                 GROUP BY
                     Site, Year, Month;
             """
-            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw(sql_query_syncrec)
+            fetchset_SyncRecords = VSyncRecords.objects.using('grid').raw(sql_query_syncrec)
 
             # Create empty dicts that will become dfs to be combined
             summaries_dict = summaries_dict_standard.copy()
@@ -341,7 +341,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                 GROUP BY
                     Site, Year, Month;
             """.format(SiteName)
-            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw(sql_query_summaries)
+            fetchset_Summaries = VSuperSummaries.objects.using('grid').raw(sql_query_summaries)
 
             sql_query_syncrecords = """
                 SELECT
@@ -354,7 +354,7 @@ class GridSiteSyncViewSet(viewsets.ReadOnlyModelViewSet):
                 GROUP BY
                     Site, Year, Month;
             """.format(SiteName)
-            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw(sql_query_syncrecords)
+            fetchset_SyncRecords = VSyncRecords.objects.using('grid').raw(sql_query_syncrecords)
 
             summaries_dict = summaries_dict_standard.copy()
             syncrecords_dict = syncrecords_dict_standard.copy()
@@ -476,7 +476,7 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
                     Year='{}'
                 GROUP BY SubmitHost;
             """.format(SiteName, Month, Year)
-            fetchset_Summaries = VSuperSummaries.objects.using('apel').raw(sql_query_summaries)
+            fetchset_Summaries = VSuperSummaries.objects.using('grid').raw(sql_query_summaries)
 
             sql_query_syncrecords = """
                 SELECT
@@ -492,7 +492,7 @@ class GridSiteSyncSubmitHViewSet(MultipleFieldLookupMixin, viewsets.ReadOnlyMode
                     Year='{}'
                 GROUP BY SubmitHost;
             """.format(SiteName, Month, Year)
-            fetchset_SyncRecords = VSyncRecords.objects.using('apel').raw(sql_query_syncrecords)
+            fetchset_SyncRecords = VSyncRecords.objects.using('grid').raw(sql_query_syncrecords)
 
             summaries_dict = summaries_dict_standard.copy()
             syncrecords_dict = syncrecords_dict_standard.copy()
