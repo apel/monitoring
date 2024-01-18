@@ -6,7 +6,7 @@ To get a 'prototype' of the monitoring app running with Apache, follow these ste
 
 Allow 15 minutes after the machine is created, then remember to edit security groups from OpenStack to allow Apache to work.
 Then follow these steps from within the machine:
-- yum remove git && quattor-fetch && quattor-configure --all
+- quattor-fetch && quattor-configure --all
 - cd /usr/share/DJANGO_MONITORING_APP/monitoring
 - modify the file settings.py, specifically the dict called DATABASES, to include the right credentials and database names
 - cd ..

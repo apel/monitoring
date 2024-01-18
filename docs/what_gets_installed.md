@@ -1,7 +1,7 @@
 For Django to work with apache, it is common to have a venv within the app, where django and djangorestframework get installed. Other packages needed for the app to work are installed by Aquilon outside the venv.
 
 ## Packages installed by Aquilon outside the venv
-Following the config file that Aquilon uses, the following are the packages installed, in this order:
+Following the config file that Aquilon uses, the following are the packages installed:
 - httpd
 - python3-mod_wsgi (for apache to work with django)
 - python3-devel
