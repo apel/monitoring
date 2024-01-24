@@ -138,7 +138,6 @@ class GridSiteViewSet(viewsets.ReadOnlyModelViewSet):
                     Site,
                     max(LatestEndTime) AS LatestPublish
                 FROM VSuperSummaries
-                WHERE Year=2019
                 GROUP BY 1;
             """
             fetchset = VSuperSummaries.objects.using('grid').raw(sql_query)
