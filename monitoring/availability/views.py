@@ -7,4 +7,4 @@ from rest_framework.response import Response
 
 @api_view()
 def status(requst):
-    return Response("OK", status=200)
+    return Response({"message": "OK"}, status=200, template_name="status.html")
