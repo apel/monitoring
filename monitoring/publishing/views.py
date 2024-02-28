@@ -568,7 +568,7 @@ class CloudSiteViewSet(viewsets.ReadOnlyModelViewSet):
                         SiteName,
                         MAX(UpdateTime) AS latest
                     FROM VAnonCloudRecords
-                    WHERE UpdateTime>'2018-07-25'
+                    WHERE UpdateTime>'2023-01-01'
                     GROUP BY SiteName
                 )
                 AS a
