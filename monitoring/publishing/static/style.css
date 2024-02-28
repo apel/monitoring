@@ -1,0 +1,53 @@
+/*- Menu Tabs E--------------------------- */
+
+    #tabsE {
+      float:left;
+      width:100%;
+      background:#333;
+      font-size:93%;
+      line-height:normal;
+
+      }
+    #tabsE ul {
+	margin:0;
+	padding:10px 10px 0 50px;
+	list-style:none;
+      }
+    #tabsE li {
+      display:inline;
+      margin:0;
+      padding:0;
+      }
+    #tabsE a {
+      float:left;
+      background:url("tableftE.gif") no-repeat left top;
+      margin:0;
+      padding:0 0 0 4px;
+      text-decoration:none;
+      }
+    #tabsE a span {
+      float:left;
+      display:block;
+      background:url("tabrightE.gif") no-repeat right top;
+      padding:5px 15px 4px 6px;
+      color:#fff;
+      }
+    /* Commented Backslash Hack hides rule from IE5-Mac \*/
+    #tabsE a span {float:none;}
+    /* End IE5-Mac hack */
+    #tabsE a:hover span {
+      color:#FFF;
+      }
+    #tabsE a:hover {
+      background-position:0% -42px;
+      }
+    #tabsE a:hover span {
+      background-position:100% -42px;
+      }  
+
+	#tabsE #current a {
+		background-position:0% -42px;
+	}
+	#tabsE #current a span {
+		background-position:100% -42px;
+	}
