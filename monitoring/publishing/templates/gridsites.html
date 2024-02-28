@@ -17,7 +17,7 @@
 <li>lastBuild : {{ last_fetched|date:"Y-m-d H:i:s.u"|slice:":22" }}</ul><hr>
 
 <table>
-  <tr><th colspan='5' class='tableheader'>{{ sites.0.name }}</td></tr>
+  <tr><th colspan='5' class='tableheader'>{{ sites.0.SiteName }}</td></tr>
   <tr>
     <th class='tableheader'>ExecutingSite</th>
     <th class='tableheader'>MeasurementDate</th>
@@ -25,7 +25,7 @@
     <th class='tableheader'>Publication <br> Status</th>
   </tr>
   <tr>
-    <td align='middle' class='tabletext'>{{ sites.0.name }}</td>
+    <td align='middle' class='tabletext'>{{ sites.0.SiteName }}</td>
     <td align='middle' class='tabletext'>{{ last_fetched|date:"Y-m-d" }}</td>
     <td align='middle' class='tabletext'>{{ last_fetched|date:"G:i:s" }}</td>
     <td align='middle' class='tabletext'>{{ stdout }}</td>

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'monitoring.publishing',
+    'monitoring.availability',
 ]
 
 REST_FRAMEWORK = {
@@ -91,17 +92,19 @@ DATABASES = {
     },
     'grid': {
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': 'localhost',
+        'HOST': '',
         'PORT': '3306',
-        'NAME': 'django_test_grid',
-        'USER': 'root',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': '',
     },
     'cloud': {
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': 'localhost',
+        'HOST': '',
         'PORT': '3306',
-        'NAME': 'django_test',
-        'USER': 'root',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': '',
     },
 }
 
@@ -143,3 +146,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")

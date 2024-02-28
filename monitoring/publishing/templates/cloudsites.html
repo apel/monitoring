@@ -16,9 +16,9 @@
     </tr>
     {% for site in sites %}
     <tr>
-      <td>{{ site.name }}</td>
-      <td>{{ site.vms }}</td>
-      <td>{{ site.script }}</td>
+      <td>{{ site.SiteName }}</td>
+      <td>{{ site.Vms }}</td>
+      <td>{{ site.Script }}</td>
       <td>{{ site.updated|date:"Y-m-d H:i:s" }}</td>
     </tr>
     {% endfor %}

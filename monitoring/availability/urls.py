@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-import views
+from monitoring.availability import views
 
 urlpatterns = [
     url(r'^$', views.status),
