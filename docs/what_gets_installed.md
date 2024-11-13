@@ -6,18 +6,19 @@ Following the config file that Aquilon uses, the following are the packages inst
 - python3-mod_wsgi (for apache to work with django)
 - python3-devel
 - gcc (needed for dependencies)
-- mariadb.
-
+- mariadb
+- tar (needed for pinning the monitoring repo).
 
 ## Packages installed within the venv
 Within venv, the following are installed through pip:
-- djangorestframework (3.11.2)
-- pymysql (needed for mariadb to work)
-- pandas (needed by the app)
-- django (2.1.*).
+- djangorestframework (3.15.1)
+- pymysql (1.0.2) (needed for mariadb to work)
+- pandas (1.1.5) (needed by the app)
+- django (3.1.14)
+- pytz (2024.2).
 
 Note that when the version of the packages is specified, the app would not work with a different version (due to dependencies conflicts).
-Also, as long as mariadb is installed (both client and server), it is not necessary to install mysqlclient (at least when the OS is Scientific Linux).
+Also, as long as mariadb is installed (both client and server), it is not necessary to install mysqlclient.
 
 Is is also important to note that different types of OS require different packages to be installed. 
-The above are the packages that allow the app to work on a scientific linux 7 machine. A Centos machine would require slightly different packages.
+The above are the packages that allow the app to work on a Rocky8.
