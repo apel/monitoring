@@ -18,7 +18,6 @@ Within venv, the following are installed through pip:
 - pytz (2024.2).
 
 Note that when the version of the packages is specified, the app would not work with a different version (due to dependencies conflicts).
-Also, as long as mariadb is installed (both client and server), it is not necessary to install mysqlclient.
 
 Is is also important to note that different types of OS require different packages to be installed. 
 The above are the packages that allow the app to work on a Rocky8.
