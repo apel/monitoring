@@ -7,7 +7,7 @@ Following the config file that Aquilon uses, the following are the packages inst
 - python3-devel
 - gcc (needed for dependencies)
 - mariadb
-- tar (needed for pinning the monitoring repo).
+- tar.
 
 ## Packages installed within the venv
 Within venv, the following are installed through pip:
