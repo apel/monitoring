@@ -26,7 +26,7 @@ DEBUG = False
 try:
 
     # Read configuration from the file
-    cp = configparser.ConfigParser()
+    cp = configparser.ConfigParser(interpolation=None)
     file_path = os.path.join(BASE_DIR, 'monitoring', 'settings.ini')
     cp.read(file_path)
 
