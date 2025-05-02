@@ -70,6 +70,7 @@ def fill_summaries_dict(inpDict, row):
 
     return inpDict
 
+
 def fill_syncrecords_dict(inpDict, row):
     inpDict["Site"] = inpDict.get("Site") + [row.Site]
     inpDict["Month"] = inpDict.get("Month") + [row.Month]
@@ -79,6 +80,7 @@ def fill_syncrecords_dict(inpDict, row):
         inpDict["SubmitHostSync"] = inpDict.get("SubmitHostSync") + [row.SubmitHostSync]
     return inpDict
 
+
 def correct_dict(inpDict):
     keys_to_remove = []
     for key, val in inpDict.items():
@@ -87,6 +89,7 @@ def correct_dict(inpDict):
     for key in keys_to_remove:
         inpDict.pop(key)
     return inpDict
+
 
 def get_year_month_str(year, month):
     year_string = str(year)
@@ -245,6 +248,7 @@ def refresh_gridsitesync():
 
     except DatabaseError:
         log.exception('Error while trying to refresh GridSiteSync')
+
 
 if __name__ == "__main__":
 
