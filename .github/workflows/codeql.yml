@@ -1,13 +1,16 @@
-name: "CodeQL Advanced"
+name: "CodeQL"
 
 on:
   push:
     branches: [ "dev" ]
+    # Can't use the paths-ignore with 'push' as this would cause missing analyses.
   pull_request:
+    # The branches below must be a subset of the branches above
     branches: [ "dev" ]
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
+      - '**/*.sh'
   schedule:
     - cron: '33 13 * * 2'
 
@@ -32,7 +35,7 @@ jobs:
         language: [ actions, python ]
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
