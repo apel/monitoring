@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 try:
 
@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'monitoring.publishing',
     'monitoring.availability',
+    'monitoring.synchronisation',
     'monitoring.benchmarks',
     'monitoring.iris',
     'monitoring.validator',
