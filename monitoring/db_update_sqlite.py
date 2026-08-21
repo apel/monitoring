@@ -494,10 +494,16 @@ def refresh_gridsitesync_submithost():
             year = record.get("Year")
             submit_host = record.get("SubmitHostSumm") or record.get("SubmitHostSync")
             record_start = record.get("RecordStart")
+            record_end = record.get("RecordEnd")
 
-            # Skip rows where RecordStart is missing or NaN
-            if pd.isna(record_start):
+            if pd.isna(submit_host):
                 continue
+
+            if pd.isna(record_start):
+                record_start = None
+            
+            if pd.isna(record_end):
+                record_end = None    
 
             # Sanitize numeric fields
             record_count_published = record.get("RecordCountPublished")
@@ -516,7 +522,7 @@ def refresh_gridsitesync_submithost():
                 SubmitHost=submit_host,
                 defaults={
                     'RecordStart': record_start,
-                    'RecordEnd': record.get("RecordEnd"),
+                    'RecordEnd': record_end,
                     'RecordCountPublished': record_count_published,
                     'RecordCountInDb': record_count_in_db,
                 }

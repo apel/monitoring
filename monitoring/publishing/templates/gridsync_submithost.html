@@ -35,8 +35,8 @@
   <tr onmouseover="this.className='highlight-row'" onmouseout="this.className='tabletext'" class="tabletext">
     <td>{{ host.YearMonth }} </td>
     <td>{{ host.SubmitHost }}</td>
-    <td>{{ host.RecordStart }}</td>
-    <td>{{ host.RecordEnd }}</td>
+    <td>{{ host.RecordStart|default:"n/a" }}</td>
+    <td>{{ host.RecordEnd|default:"n/a" }}</td>
     <td>{{ host.RecordCountInDb|intcomma }}</td>
     <td>{{ host.RecordCountPublished|intcomma }}</td>
   </tr>
