@@ -501,9 +501,9 @@ def refresh_gridsitesync_submithost():
 
             if pd.isna(record_start):
                 record_start = None
-            
+
             if pd.isna(record_end):
-                record_end = None    
+                record_end = None  
 
             # Sanitize numeric fields
             record_count_published = record.get("RecordCountPublished")
