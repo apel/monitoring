@@ -498,17 +498,11 @@ def refresh_gridsitesync_submithost():
                 if pd.isna(record.get("SubmitHostSumm"))
                 else record.get("SubmitHostSumm")
             )
-            record_start = record.get("RecordStart")
-            record_end = record.get("RecordEnd")
+            record_start = none_if_missing(record.get("RecordStart"))
+            record_end = none_if_missing(record.get("RecordEnd"))
 
             if pd.isna(submit_host):
                 continue
-
-            if pd.isna(record_start):
-                record_start = None
-
-            if pd.isna(record_end):
-                record_end = None
 
             # Sanitize numeric fields
             record_count_published = record.get("RecordCountPublished")
@@ -537,6 +531,10 @@ def refresh_gridsitesync_submithost():
 
     except DatabaseError:
         log.exception("Error while trying to refresh GridSiteSyncSubmitH")
+
+
+def none_if_missing(value):
+    return None if pd.isna(value) else value
 
 
 if __name__ == "__main__":
