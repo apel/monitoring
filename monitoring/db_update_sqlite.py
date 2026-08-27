@@ -492,11 +492,16 @@ def refresh_gridsitesync_submithost():
             site = record.get("Site")
             month = record.get("Month")
             year = record.get("Year")
-            submit_host = record.get("SubmitHostSumm") or record.get("SubmitHostSync")
-            record_start = record.get("RecordStart")
+            # Use SubmitHostSync when SubmitHostSumm is missing (NaN)
+            submit_host = (
+                record.get("SubmitHostSync")
+                if pd.isna(record.get("SubmitHostSumm"))
+                else record.get("SubmitHostSumm")
+            )
+            record_start = none_if_missing(record.get("RecordStart"))
+            record_end = none_if_missing(record.get("RecordEnd"))
 
-            # Skip rows where RecordStart is missing or NaN
-            if pd.isna(record_start):
+            if pd.isna(submit_host):
                 continue
 
             # Sanitize numeric fields
@@ -516,7 +521,7 @@ def refresh_gridsitesync_submithost():
                 SubmitHost=submit_host,
                 defaults={
                     'RecordStart': record_start,
-                    'RecordEnd': record.get("RecordEnd"),
+                    'RecordEnd': record_end,
                     'RecordCountPublished': record_count_published,
                     'RecordCountInDb': record_count_in_db,
                 }
@@ -526,6 +531,13 @@ def refresh_gridsitesync_submithost():
 
     except DatabaseError:
         log.exception("Error while trying to refresh GridSiteSyncSubmitH")
+
+
+def none_if_missing(value):
+    """
+    Return None when the value is missing (NaN/NaT), otherwise return it unchanged.
+    """
+    return None if pd.isna(value) else value
 
 
 if __name__ == "__main__":
