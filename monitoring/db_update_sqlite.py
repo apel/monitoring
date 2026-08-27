@@ -534,6 +534,9 @@ def refresh_gridsitesync_submithost():
 
 
 def none_if_missing(value):
+    """
+    Return None when the value is missing (NaN/NaT), otherwise return it unchanged.
+    """
     return None if pd.isna(value) else value
 
 
