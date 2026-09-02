@@ -1,6 +1,6 @@
 # Pin packages to work with Python 3.9.
 Django==4.2.30
-djangorestframework==3.16.1
+djangorestframework==3.17.2
 numpy==2.0.2  # pandas dependency
 pandas==2.3.3
 PyMySQL==1.2.0
