@@ -286,7 +286,7 @@ def refresh_gridsitesync():
             df_SyncRecords,
             left_on=['Site', 'Month', 'Year'],
             right_on=['Site', 'Month', 'Year'],
-            how='inner'
+            how='outer'
         )
         fetchset = df_all.to_dict('index')
 
