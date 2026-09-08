@@ -145,8 +145,9 @@ def determine_sync_status(f):
     RecordCountPublished = f.get("RecordCountPublished")
     RecordCountInDb = f.get("RecordCountInDb")
 
-    # catches None or zero
-    if not RecordCountPublished or not RecordCountInDb:
+    # catches None or nan or zero
+    if (not RecordCountPublished or not RecordCountInDb or
+        pd.isna(RecordCountPublished) or pd.isna(RecordCountInDb)):
         return "WARNING [ Invalid record counts ]"
 
     diff = abs(RecordCountPublished - RecordCountInDb)
@@ -297,10 +298,10 @@ def refresh_gridsitesync():
             # Combined primary keys outside the default dict
             GridSiteSync.objects.update_or_create(
                 defaults={
-                    'RecordStart': f.get("RecordStart"),
-                    'RecordEnd': f.get("RecordEnd"),
-                    'RecordCountPublished': f.get("RecordCountPublished"),
-                    'RecordCountInDb': f.get("RecordCountInDb"),
+                    'RecordStart': none_if_missing(f.get("RecordStart")),
+                    'RecordEnd': none_if_missing(f.get("RecordEnd")),
+                    'RecordCountPublished': zero_if_missing(f.get("RecordCountPublished")),
+                    'RecordCountInDb': zero_if_missing(f.get("RecordCountInDb")),
                     'SyncStatus': f.get("SyncStatus"),
                 },
                 YearMonth=get_year_month_str(f.get("Year"), f.get("Month")),
@@ -538,6 +539,12 @@ def none_if_missing(value):
     Return None when the value is missing (NaN/NaT), otherwise return it unchanged.
     """
     return None if pd.isna(value) else value
+
+def zero_if_missing(value):
+    """
+    Return zero when the value is missing (NaN/NaT), otherwise return it unchanged.
+    """
+    return 0 if pd.isna(value) else value
 
 
 if __name__ == "__main__":
