@@ -146,9 +146,11 @@ def determine_sync_status(f):
     RecordCountInDb = f.get("RecordCountInDb")
 
     # catches None or nan or zero
-    if (not RecordCountPublished or not RecordCountInDb or
-        pd.isna(RecordCountPublished) or pd.isna(RecordCountInDb)):
+    if not RecordCountPublished or pd.isna(RecordCountPublished):
         return "WARNING [ Invalid record counts ]"
+
+    if not RecordCountInDb or pd.isna(RecordCountInDb):
+        return "OK [ No matching sync record ]"
 
     diff = abs(RecordCountPublished - RecordCountInDb)
     rel_diff1 = diff/RecordCountInDb
