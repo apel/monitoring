@@ -145,9 +145,12 @@ def determine_sync_status(f):
     RecordCountPublished = f.get("RecordCountPublished")
     RecordCountInDb = f.get("RecordCountInDb")
 
-    # catches None or zero
-    if not RecordCountPublished or not RecordCountInDb:
+    # catches None or nan or zero
+    if not RecordCountPublished or pd.isna(RecordCountPublished):
         return "WARNING [ Invalid record counts ]"
+
+    if not RecordCountInDb or pd.isna(RecordCountInDb):
+        return "OK [ No matching sync record ]"
 
     diff = abs(RecordCountPublished - RecordCountInDb)
     rel_diff1 = diff/RecordCountInDb
@@ -286,7 +289,7 @@ def refresh_gridsitesync():
             df_SyncRecords,
             left_on=['Site', 'Month', 'Year'],
             right_on=['Site', 'Month', 'Year'],
-            how='inner'
+            how='outer'
         )
         fetchset = df_all.to_dict('index')
 
@@ -297,10 +300,10 @@ def refresh_gridsitesync():
             # Combined primary keys outside the default dict
             GridSiteSync.objects.update_or_create(
                 defaults={
-                    'RecordStart': f.get("RecordStart"),
-                    'RecordEnd': f.get("RecordEnd"),
-                    'RecordCountPublished': f.get("RecordCountPublished"),
-                    'RecordCountInDb': f.get("RecordCountInDb"),
+                    'RecordStart': none_if_missing(f.get("RecordStart")),
+                    'RecordEnd': none_if_missing(f.get("RecordEnd")),
+                    'RecordCountPublished': zero_if_missing(f.get("RecordCountPublished")),
+                    'RecordCountInDb': zero_if_missing(f.get("RecordCountInDb")),
                     'SyncStatus': f.get("SyncStatus"),
                 },
                 YearMonth=get_year_month_str(f.get("Year"), f.get("Month")),
@@ -538,6 +541,12 @@ def none_if_missing(value):
     Return None when the value is missing (NaN/NaT), otherwise return it unchanged.
     """
     return None if pd.isna(value) else value
+
+def zero_if_missing(value):
+    """
+    Return zero when the value is missing (NaN/NaT), otherwise return it unchanged.
+    """
+    return 0 if pd.isna(value) else value
 
 
 if __name__ == "__main__":
