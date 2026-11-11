@@ -333,6 +333,7 @@ def refresh_BenchmarksBySubmitHost_from_view(view_name):
                         SubmitHost,
                         ServiceLevelType,
                         ServiceLevel,
+                        InfrastructureDescription,
                         UpdateTime,
                         ROW_NUMBER() OVER (
                             PARTITION BY Site, SubmitHost
@@ -346,6 +347,7 @@ def refresh_BenchmarksBySubmitHost_from_view(view_name):
                     SubmitHost,
                     ServiceLevelType,
                     ServiceLevel,
+                    InfrastructureDescription,
                     UpdateTime AS LatestPublish
                 FROM latest
                 WHERE rn = 1;
@@ -358,6 +360,7 @@ def refresh_BenchmarksBySubmitHost_from_view(view_name):
                         SubmitHost,
                         ServiceLevelType,
                         ServiceLevel,
+                        InfrastructureDescription,
                         UpdateTime,
                         ROW_NUMBER() OVER (
                             PARTITION BY Site, SubmitHost
@@ -372,6 +375,7 @@ def refresh_BenchmarksBySubmitHost_from_view(view_name):
                     SubmitHost,
                     ServiceLevelType,
                     ServiceLevel,
+                    InfrastructureDescription,
                     UpdateTime AS LatestPublish
                 FROM latest
                 WHERE rn = 1;
@@ -385,6 +389,7 @@ def refresh_BenchmarksBySubmitHost_from_view(view_name):
                         ServiceLevelType,
                         NormalisedWallDuration,
                         WallDuration,
+                        InfrastructureDescription,
                         UpdateTime,
                         ROW_NUMBER() OVER (
                             PARTITION BY Site, SubmitHost
@@ -399,6 +404,7 @@ def refresh_BenchmarksBySubmitHost_from_view(view_name):
                     SubmitHost,
                     ServiceLevelType,
                     ROUND(NormalisedWallDuration / WallDuration, 3) AS ServiceLevel,
+                    InfrastructureDescription,
                     UpdateTime AS LatestPublish
                 FROM latest
                 WHERE rn = 1;
@@ -415,6 +421,7 @@ def refresh_BenchmarksBySubmitHost_from_view(view_name):
             BenchmarksBySubmithost.objects.update_or_create(
                 defaults={
                     'UpdateTime': make_aware(f.LatestPublish) if is_naive(f.LatestPublish) else f.LatestPublish,
+                    'InfrastructureDescription': f.InfrastructureDescription or 'None',
                 },
                 SiteName=f.Site,
                 SubmitHost=f.SubmitHost,

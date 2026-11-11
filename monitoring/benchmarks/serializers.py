@@ -17,5 +17,6 @@ class BenchmarksBySubmithostSerializer(serializers.HyperlinkedModelSerializer):
             'BenchmarkType',
             'BenchmarkValue',
             'RecordType',
+            'InfrastructureDescription',
             'UpdateTime',
         )

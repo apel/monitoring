@@ -8,6 +8,7 @@ class BenchmarksBySubmithost(models.Model):
     BenchmarkType = models.CharField(max_length=50)
     BenchmarkValue = models.DecimalField(max_digits=10, decimal_places=3)
     RecordType = models.CharField(max_length=50)
+    InfrastructureDescription = models.CharField(max_length=100)
     UpdateTime = models.DateTimeField()
 
     class Meta:
